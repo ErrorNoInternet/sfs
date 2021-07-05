@@ -2,7 +2,7 @@ programVersion = "1.0"
 versionType = "Release"
 updateTime = "July 5, 2021"
 prompt = "[SFS !commandCount!] !directory!> "
-accessKey = 'SShHj29YE0LNlAz7QbtEWjGt2yrVb4obD9MjLWcOEKU='
+accessKey = 'ZlbkIUNLZ03bd-5EtEt7Jg1ql1yV-VE4GZG1sVywfBs='
 firstRun = 0
 help = [
     "Most system commands will also work by adding 'os:' to the beginning of the command",
