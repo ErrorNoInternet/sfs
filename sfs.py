@@ -10,7 +10,7 @@ def loadSFS(storageDirectory):
     try:
         os.chdir(storageDirectory)
     except:
-        print("Storage directory not found! Creating new directory...\n\n")
+        print("Storage directory not found! Creating new directory...")
         os.mkdir(storageDirectory); os.chdir(storageDirectory)
 
     while True:
@@ -23,7 +23,7 @@ def loadSFS(storageDirectory):
             promptText = promptText.replace("!accessKey!", data.accessKey)
             promptText = promptText.replace("!commandCount!", str(tools.commandCount))
             promptText = promptText.replace("!directory!", currentDirectory)
-            prompt = input(promptText)
+            prompt = input("\n" + promptText)
         except KeyboardInterrupt:
             print("\n\nSFS.PROMPT.ERROR:KEYBOARD_INTERRUPT")
             sys.exit()

@@ -1,6 +1,6 @@
-programVersion = "1.0"
+programVersion = "1.0.1"
 versionType = "Release"
-updateTime = "July 5, 2021"
+updateTime = "July 6, 2021"
 prompt = "[SFS !commandCount!] !directory!> "
 accessKey = 'ZlbkIUNLZ03bd-5EtEt7Jg1ql1yV-VE4GZG1sVywfBs='
 firstRun = 0

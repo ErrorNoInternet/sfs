@@ -114,11 +114,8 @@ def getCommandCount():
 
 def cat(filename):
     file = open(filename, "r")
-    fileData = file.read().splitlines()
-    file.close()
-    for line in fileData:
-        print(line)
-    return "Successfully displayed file contents"
+    fileData = file.read(); file.close()
+    return fileData
 
 def changeKey(newKey):
     print("\nCurrent Key: " + data.accessKey)
