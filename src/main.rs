@@ -43,7 +43,7 @@ fn main() {
     };
 
     print!("Password (for this session): ");
-    std::io::stdout().flush();
+    std::io::stdout().flush().unwrap();
     let password = rpassword::read_password().expect("Unable to read password");
     if password.len() <= 0 {
         println!("No password specified. Quitting...");
@@ -52,7 +52,7 @@ fn main() {
     let fernet = generate_fernet(&password);
 
     loop {
-        let mut current_path = String::new();
+        let current_path;
         match std::env::current_dir() {
             Ok(current_pathbuf) => current_path = current_pathbuf.to_str().unwrap().to_string(),
             Err(error) => {
@@ -63,10 +63,12 @@ fn main() {
         let mut prompt = format_prompt(&configuration.prompt);
         prompt = prompt.replace("$PATH$", &current_path);
         print!("{}", prompt);
-        std::io::stdout().flush();
+        std::io::stdout().flush().unwrap();
 
         let mut input = String::new();
-        std::io::stdin().read_line(&mut input);
+        std::io::stdin()
+            .read_line(&mut input)
+            .expect("Unable to read line");
         input = input.trim().to_string();
         let tokens = tokenize(&input);
 
