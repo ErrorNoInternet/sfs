@@ -69,7 +69,7 @@ fn main() {
                 return;
             }
         }
-        let mut prompt = format_prompt(&configuration.prompt);
+        let mut prompt = format_colors(&configuration.prompt);
         prompt = prompt.replace("$PATH$", &current_path);
         print!("{}", prompt);
         std::io::stdout().flush().unwrap();
@@ -146,21 +146,21 @@ fn generate_fernet(password: &String) -> fernet::Fernet {
     fernet::Fernet::new(&base64::encode(key)).unwrap()
 }
 
-fn format_prompt(old_prompt: &String) -> String {
-    let mut prompt = old_prompt.clone();
-    prompt = prompt.replace("$NORMAL$", "\u{001b}[0m");
-    prompt = prompt.replace("$BOLD$", "\u{001b}[1m");
+fn format_colors(text: &String) -> String {
+    let mut text = text.clone();
+    text = text.replace("$NORMAL$", "\u{001b}[0m");
+    text = text.replace("$BOLD$", "\u{001b}[1m");
 
-    prompt = prompt.replace("$BLACK$", "\u{001b}[30m");
-    prompt = prompt.replace("$RED$", "\u{001b}[31m");
-    prompt = prompt.replace("$GREEN$", "\u{001b}[32m");
-    prompt = prompt.replace("$YELLOW$", "\u{001b}[33m");
-    prompt = prompt.replace("$BLUE$", "\u{001b}[34m");
-    prompt = prompt.replace("$MAGENTA$", "\u{001b}[35m");
-    prompt = prompt.replace("$CYAN$", "\u{001b}[36m");
-    prompt = prompt.replace("$WHITE$", "\u{001b}[37m");
+    text = text.replace("$BLACK$", "\u{001b}[30m");
+    text = text.replace("$RED$", "\u{001b}[31m");
+    text = text.replace("$GREEN$", "\u{001b}[32m");
+    text = text.replace("$YELLOW$", "\u{001b}[33m");
+    text = text.replace("$BLUE$", "\u{001b}[34m");
+    text = text.replace("$MAGENTA$", "\u{001b}[35m");
+    text = text.replace("$CYAN$", "\u{001b}[36m");
+    text = text.replace("$WHITE$", "\u{001b}[37m");
 
-    prompt
+    text
 }
 
 fn quit_sfs() {
