@@ -11,7 +11,7 @@ struct Configuration {
 impl Configuration {
     fn default() -> Self {
         Configuration {
-            prompt: String::from("$BLUE$$PATH$ $BOLD$>$NORMAL$ "),
+            prompt: String::from("$BOLD$$BLUE$$PATH$ >$NORMAL$ "),
             security: SecurityConfiguration {
                 password_timeout_seconds: 300,
             },
@@ -58,6 +58,7 @@ fn main() {
         println!("Passwords do not match!");
         return;
     }
+    println!();
 
     loop {
         let current_path;
