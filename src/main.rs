@@ -89,19 +89,31 @@ fn main() {
                 match fs::read_dir(input_path) {
                     Ok(paths) => {
                         for path in paths {
-                            println!(
-                                "{}",
-                                path.unwrap()
-                                    .path()
-                                    .display()
-                                    .to_string()
-                                    .trim_start_matches((input_path.to_owned() + "/").as_str())
-                            )
+                            match path {
+                                Ok(path) => {
+                                    if path.file_type().unwrap().is_dir() {
+                                        println!(
+                                            "{}",
+                                            format_colors(&format!(
+                                                "$BLUE${}",
+                                                path.file_name().to_str().unwrap()
+                                            ))
+                                        )
+                                    } else {
+                                        println!(
+                                            "{}",
+                                            format_colors(&format!(
+                                                "$NORMAL${}",
+                                                path.file_name().to_str().unwrap()
+                                            ))
+                                        )
+                                    }
+                                }
+                                Err(error) => println!("Unable to get file information: {}", error),
+                            }
                         }
                     }
-                    Err(error) => {
-                        println!("Unable to read directory: {}", error);
-                    }
+                    Err(error) => println!("Unable to read directory: {}", error),
                 }
             }
             _ => println!("Unknown command"),
