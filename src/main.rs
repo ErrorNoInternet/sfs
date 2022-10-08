@@ -11,7 +11,7 @@ struct Configuration {
 impl Configuration {
     fn default() -> Self {
         Configuration {
-            prompt: String::from("$PATH$ $BOLD$>$NORMAL$ "),
+            prompt: String::from("$BLUE$$PATH$ $BOLD$>$NORMAL$ "),
             security: SecurityConfiguration {
                 password_timeout_seconds: 300,
             },
@@ -49,7 +49,15 @@ fn main() {
         println!("No password specified. Quitting...");
         return;
     }
-    let fernet = generate_fernet(&password);
+    print!("Repeat Password: ");
+    std::io::stdout().flush().unwrap();
+    let repeat_password = rpassword::read_password().expect("Unable to read password");
+    if password == repeat_password {
+        let fernet = generate_fernet(&password);
+    } else {
+        println!("Passwords do not match!");
+        return;
+    }
 
     loop {
         let current_path;
@@ -73,6 +81,7 @@ fn main() {
         let tokens = tokenize(&input);
 
         match tokens[0].as_str() {
+            "quit" | "exit" | "q" => quit_sfs(),
             "ls" => {
                 let current_directory = String::from(".");
                 let input_path = tokens.iter().nth(1).unwrap_or(&current_directory);
@@ -140,5 +149,17 @@ fn format_prompt(old_prompt: &String) -> String {
     let mut prompt = old_prompt.clone();
     prompt = prompt.replace("$NORMAL$", "\u{001b}[0m");
     prompt = prompt.replace("$BOLD$", "\u{001b}[1m");
+
+    prompt = prompt.replace("$BLACK$", "\u{001b}[30m");
+    prompt = prompt.replace("$RED$", "\u{001b}[31m");
+    prompt = prompt.replace("$GREEN$", "\u{001b}[32m");
+    prompt = prompt.replace("$YELLOW$", "\u{001b}[33m");
+    prompt = prompt.replace("$BLUE$", "\u{001b}[34m");
+    prompt = prompt.replace("$MAGENTA$", "\u{001b}[35m");
+    prompt = prompt.replace("$CYAN$", "\u{001b}[36m");
+    prompt = prompt.replace("$WHITE$", "\u{001b}[37m");
+
     prompt
 }
+
+fn quit_sfs() {}
