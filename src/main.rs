@@ -163,4 +163,6 @@ fn format_prompt(old_prompt: &String) -> String {
     prompt
 }
 
-fn quit_sfs() {}
+fn quit_sfs() {
+    std::process::exit(0)
+}
