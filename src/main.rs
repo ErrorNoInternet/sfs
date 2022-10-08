@@ -42,7 +42,7 @@ fn main() {
         Err(_) => Configuration::default(),
     };
 
-    print!("Password (for this session): ");
+    print!("{}\nPassword: ", format_colors(&String::from("$BOLD$Please enter your password (used to encrypt/decrypt files, only for this session).$NORMAL$")));
     std::io::stdout().flush().unwrap();
     let password = rpassword::read_password().expect("Unable to read password");
     if password.len() <= 0 {
