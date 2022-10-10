@@ -5,23 +5,14 @@ use std::{fs, io::Write};
 #[derive(Deserialize)]
 struct Configuration {
     prompt: String,
-    security: SecurityConfiguration,
 }
 
 impl Configuration {
     fn default() -> Self {
         Configuration {
             prompt: String::from("$BOLD$$BLUE$$PATH$ >$NORMAL$ "),
-            security: SecurityConfiguration {
-                password_timeout_seconds: 300,
-            },
         }
     }
-}
-
-#[derive(Deserialize)]
-struct SecurityConfiguration {
-    password_timeout_seconds: i32,
 }
 
 fn main() {
