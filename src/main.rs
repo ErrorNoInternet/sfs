@@ -104,7 +104,6 @@ fn main() {
         println!("Passwords do not match!");
         return;
     }
-    println!();
 
     let editor_configuration = Config::builder()
         .history_ignore_space(true)
@@ -118,6 +117,8 @@ fn main() {
     };
     editor.set_helper(Some(autocomplete_helper));
     loop {
+        println!();
+
         let current_path;
         match std::env::current_dir() {
             Ok(result) => current_path = result.to_str().unwrap().to_string(),
@@ -136,12 +137,12 @@ fn main() {
                 input = line;
             }
             Err(ReadlineError::Interrupted) => {
-                println!("Interrupted");
+                println!("Interrupted!");
                 input = String::new();
                 quit_sfs();
             }
             Err(ReadlineError::Eof) => {
-                println!("EOF");
+                println!("EOF!");
                 input = String::new();
                 quit_sfs();
             }
@@ -208,9 +209,24 @@ fn main() {
                     }
                 }
             }
+            "cd" => {
+                let path;
+                match tokens.iter().nth(1) {
+                    Some(result) => path = result,
+                    None => {
+                        println!("No path specified");
+                        continue;
+                    }
+                }
+                match std::env::set_current_dir(path) {
+                    Ok(_) => (),
+                    Err(error) => {
+                        println!("Unable to change directory: {}", error)
+                    }
+                }
+            }
             _ => println!("Unknown command"),
         }
-        println!()
     }
 }
 
