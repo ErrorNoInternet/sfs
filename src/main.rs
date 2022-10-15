@@ -1,5 +1,11 @@
+use rustyline::highlight::{Highlighter, MatchingBracketHighlighter};
+use rustyline::{
+    completion::FilenameCompleter, error::ReadlineError, hint::HistoryHinter, Config, Editor,
+};
+use rustyline_derive::{Completer, Helper, Hinter, Validator};
 use serde_derive::Deserialize;
 use sha2::{Digest, Sha256};
+use std::borrow::Cow::{self, Owned};
 use std::{fs, io::Write};
 
 #[derive(Deserialize)]
@@ -12,6 +18,29 @@ impl Configuration {
         Configuration {
             prompt: String::from("$BOLD$$BLUE$$PATH$ >$NORMAL$ "),
         }
+    }
+}
+
+#[derive(Helper, Completer, Hinter, Validator)]
+struct AutocompleteHelper {
+    #[rustyline(Completer)]
+    completer: FilenameCompleter,
+    #[rustyline(Hinter)]
+    hinter: HistoryHinter,
+    highlighter: MatchingBracketHighlighter,
+}
+
+impl Highlighter for AutocompleteHelper {
+    fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
+        Owned("\x1b[1m".to_owned() + hint + "\x1b[m")
+    }
+
+    fn highlight<'l>(&self, line: &'l str, pos: usize) -> Cow<'l, str> {
+        self.highlighter.highlight(line, pos)
+    }
+
+    fn highlight_char(&self, line: &str, pos: usize) -> bool {
+        self.highlighter.highlight_char(line, pos)
     }
 }
 
@@ -35,14 +64,28 @@ fn main() {
 
     print!("{}\nPassword: ", format_colors(&String::from("$BOLD$Please enter your password (used to encrypt/decrypt files, only for this session).$NORMAL$")));
     std::io::stdout().flush().unwrap();
-    let password = rpassword::read_password().expect("Unable to read password");
+    let password;
+    match rpassword::read_password() {
+        Ok(result) => password = result,
+        Err(_) => {
+            println!("Unable to read input");
+            return;
+        }
+    }
     if password.len() <= 0 {
         println!("No password specified. Quitting...");
         return;
     }
     print!("Repeat Password: ");
     std::io::stdout().flush().unwrap();
-    let repeat_password = rpassword::read_password().expect("Unable to read password");
+    let repeat_password;
+    match rpassword::read_password() {
+        Ok(result) => repeat_password = result,
+        Err(_) => {
+            println!("Unable to read input");
+            return;
+        }
+    }
     if password == repeat_password {
         let fernet = generate_fernet(&password);
     } else {
@@ -51,25 +94,48 @@ fn main() {
     }
     println!();
 
+    let editor_configuration = Config::builder()
+        .history_ignore_space(true)
+        .completion_type(rustyline::CompletionType::List)
+        .build();
+    let mut editor = Editor::with_config(editor_configuration).unwrap();
+    let autocomplete_helper = AutocompleteHelper {
+        completer: FilenameCompleter::new(),
+        hinter: HistoryHinter {},
+        highlighter: MatchingBracketHighlighter::new(),
+    };
+    editor.set_helper(Some(autocomplete_helper));
     loop {
         let current_path;
         match std::env::current_dir() {
-            Ok(current_pathbuf) => current_path = current_pathbuf.to_str().unwrap().to_string(),
+            Ok(result) => current_path = result.to_str().unwrap().to_string(),
             Err(error) => {
                 println!("Unable to get current working directory: {}", error);
                 return;
             }
         }
-        let mut prompt = format_colors(&configuration.prompt);
-        prompt = prompt.replace("$PATH$", &current_path);
-        print!("{}", prompt);
-        std::io::stdout().flush().unwrap();
-
-        let mut input = String::new();
-        std::io::stdin()
-            .read_line(&mut input)
-            .expect("Unable to read line");
-        input = input.trim().to_string();
+        let input;
+        match editor
+            .readline(&format_colors(&configuration.prompt).replace("$PATH$", &current_path))
+        {
+            Ok(mut line) => {
+                line = line.trim().to_string();
+                editor.add_history_entry(&line);
+                input = line;
+            }
+            Err(ReadlineError::Interrupted) => {
+                println!("Interrupted");
+                return;
+            }
+            Err(ReadlineError::Eof) => {
+                println!("EOF");
+                return;
+            }
+            Err(error) => {
+                println!("Error: {}", error);
+                return;
+            }
+        }
         let tokens = tokenize(&input);
 
         match tokens[0].as_str() {
@@ -128,6 +194,8 @@ fn tokenize(command: &String) -> Vec<String> {
             continue;
         } else if letter == '"' && in_string {
             in_string = false;
+            tokens.push(current_token);
+            current_token = String::new();
             continue;
         }
         current_token.push(letter);
