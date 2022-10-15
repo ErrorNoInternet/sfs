@@ -3,20 +3,22 @@ use rustyline::{
     completion::FilenameCompleter, error::ReadlineError, hint::HistoryHinter, Config, Editor,
 };
 use rustyline_derive::{Completer, Helper, Hinter, Validator};
-use serde_derive::Deserialize;
+use serde_derive::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::borrow::Cow::{self, Owned};
 use std::{fs, io::Write};
 
-#[derive(Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Configuration {
     prompt: String,
+    debug_mode: bool,
 }
 
 impl Configuration {
     fn default() -> Self {
         Configuration {
             prompt: String::from("$BOLD$$BLUE$$PATH$ >$NORMAL$ "),
+            debug_mode: false,
         }
     }
 }
@@ -59,7 +61,17 @@ fn main() {
         };
     let configuration: Configuration = match toml::from_str(&configuration_string.as_str()) {
         Ok(configuration) => configuration,
-        Err(_) => Configuration::default(),
+        Err(_) => {
+            let configuration = Configuration::default();
+            match fs::write(
+                configuration_path.to_owned() + "configuration.toml",
+                toml::to_string(&configuration).unwrap(),
+            ) {
+                Ok(_) => (),
+                Err(error) => println!("Unable to save configuration: {}", error),
+            };
+            configuration
+        }
     };
 
     print!("{}\nPassword: ", format_colors(&String::from("$BOLD$Please enter your password (used to encrypt/decrypt files, only for this session).$NORMAL$")));
@@ -67,23 +79,23 @@ fn main() {
     let password;
     match rpassword::read_password() {
         Ok(result) => password = result,
-        Err(_) => {
-            println!("Unable to read input");
-            return;
+        Err(error) => {
+            println!("Unable to read input: {}", error);
+            std::process::exit(1)
         }
     }
     if password.len() <= 0 {
         println!("No password specified. Quitting...");
-        return;
+        std::process::exit(1)
     }
     print!("Repeat Password: ");
     std::io::stdout().flush().unwrap();
     let repeat_password;
     match rpassword::read_password() {
         Ok(result) => repeat_password = result,
-        Err(_) => {
-            println!("Unable to read input");
-            return;
+        Err(error) => {
+            println!("Unable to read input: {}", error);
+            std::process::exit(1)
         }
     }
     if password == repeat_password {
@@ -111,7 +123,7 @@ fn main() {
             Ok(result) => current_path = result.to_str().unwrap().to_string(),
             Err(error) => {
                 println!("Unable to get current working directory: {}", error);
-                return;
+                std::process::exit(1)
             }
         }
         let input;
@@ -125,52 +137,75 @@ fn main() {
             }
             Err(ReadlineError::Interrupted) => {
                 println!("Interrupted");
-                return;
+                input = String::new();
+                quit_sfs();
             }
             Err(ReadlineError::Eof) => {
                 println!("EOF");
-                return;
+                input = String::new();
+                quit_sfs();
             }
             Err(error) => {
                 println!("Error: {}", error);
-                return;
+                input = String::new();
+                quit_sfs();
             }
         }
-        let tokens = tokenize(&input);
 
+        let tokens = tokenize(&input);
+        if configuration.debug_mode {
+            println!("{:?}", tokens);
+        }
         match tokens[0].as_str() {
             "quit" | "exit" | "q" => quit_sfs(),
             "ls" => {
-                let current_directory = String::from(".");
-                let input_path = tokens.iter().nth(1).unwrap_or(&current_directory);
-                match fs::read_dir(input_path) {
-                    Ok(paths) => {
-                        for path in paths {
-                            match path {
-                                Ok(path) => {
-                                    if path.file_type().unwrap().is_dir() {
-                                        println!(
-                                            "{}",
-                                            format_colors(&format!(
-                                                "$BLUE${}",
-                                                path.file_name().to_str().unwrap()
-                                            ))
-                                        )
-                                    } else {
-                                        println!(
-                                            "{}",
-                                            format_colors(&format!(
-                                                "$NORMAL${}",
-                                                path.file_name().to_str().unwrap()
-                                            ))
-                                        )
+                let mut input_paths = Vec::new();
+                for path in tokens.iter().skip(1) {
+                    input_paths.push(path.to_owned())
+                }
+                if input_paths.len() == 0 {
+                    input_paths.push(String::from("."))
+                }
+
+                for input_path in input_paths {
+                    println!(
+                        "{}",
+                        format_colors(
+                            &String::from("$NORMAL$$BOLD$Directory listing for {}$NORMAL$")
+                                .replace("{}", &input_path)
+                        )
+                    );
+                    match fs::read_dir(input_path) {
+                        Ok(paths) => {
+                            for path in paths {
+                                match path {
+                                    Ok(path) => {
+                                        if path.file_type().unwrap().is_dir() {
+                                            println!(
+                                                "{}",
+                                                format_colors(&format!(
+                                                    "$BLUE${}",
+                                                    path.file_name().to_str().unwrap()
+                                                ))
+                                            )
+                                        } else {
+                                            println!(
+                                                "{}",
+                                                format_colors(&format!(
+                                                    "$NORMAL${}",
+                                                    path.file_name().to_str().unwrap()
+                                                ))
+                                            )
+                                        }
+                                    }
+                                    Err(error) => {
+                                        println!("Unable to get file information: {}", error)
                                     }
                                 }
-                                Err(error) => println!("Unable to get file information: {}", error),
                             }
                         }
+                        Err(error) => println!("Unable to read directory: {}", error),
                     }
-                    Err(error) => println!("Unable to read directory: {}", error),
                 }
             }
             _ => println!("Unknown command"),
@@ -185,22 +220,32 @@ fn tokenize(command: &String) -> Vec<String> {
     let mut in_string = false;
     for letter in command.chars() {
         if letter == ' ' && !in_string {
-            tokens.push(current_token);
-            current_token = String::new();
+            if current_token.len() > 0 {
+                tokens.push(current_token);
+                current_token = String::new();
+            }
             continue;
         }
         if letter == '"' && !in_string {
             in_string = true;
+            if current_token.len() > 0 {
+                tokens.push(current_token);
+                current_token = String::new();
+            }
             continue;
         } else if letter == '"' && in_string {
             in_string = false;
-            tokens.push(current_token);
-            current_token = String::new();
+            if current_token.len() > 0 {
+                tokens.push(current_token);
+                current_token = String::new();
+            }
             continue;
         }
         current_token.push(letter);
     }
-    tokens.push(current_token);
+    if current_token.len() > 0 {
+        tokens.push(current_token);
+    }
     tokens
 }
 
@@ -235,5 +280,6 @@ fn format_colors(text: &String) -> String {
 }
 
 fn quit_sfs() {
+    println!("Quitting...");
     std::process::exit(0)
 }
