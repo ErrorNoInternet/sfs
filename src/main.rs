@@ -68,7 +68,11 @@ fn main() {
                 toml::to_string(&configuration).unwrap(),
             ) {
                 Ok(_) => (),
-                Err(error) => println!("Unable to save configuration: {}", error),
+                Err(error) => println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to save configuration:$NORMAL$")),
+                    error,
+                ),
             };
             configuration
         }
@@ -80,7 +84,11 @@ fn main() {
     match rpassword::read_password() {
         Ok(result) => password = result,
         Err(error) => {
-            println!("Unable to read input: {}", error);
+            println!(
+                "{} {:?}",
+                format_colors(&String::from("$BOLD$Unable to read input:$NORMAL$")),
+                error
+            );
             std::process::exit(1)
         }
     }
@@ -94,7 +102,11 @@ fn main() {
     match rpassword::read_password() {
         Ok(result) => repeat_password = result,
         Err(error) => {
-            println!("Unable to read input: {}", error);
+            println!(
+                "{} {:?}",
+                format_colors(&String::from("$BOLD$Unable to read input:$NORMAL$")),
+                error,
+            );
             std::process::exit(1)
         }
     }
@@ -123,7 +135,13 @@ fn main() {
         match std::env::current_dir() {
             Ok(result) => current_path = result.to_str().unwrap().to_string(),
             Err(error) => {
-                println!("Unable to get current working directory: {}", error);
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from(
+                        "$BOLD$Unable to get current working directory:$NORMAL$"
+                    )),
+                    error,
+                );
                 std::process::exit(1)
             }
         }
@@ -147,7 +165,11 @@ fn main() {
                 quit_sfs();
             }
             Err(error) => {
-                println!("Error: {}", error);
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Error:$NORMAL$")),
+                    error
+                );
                 input = String::new();
                 quit_sfs();
             }
@@ -200,12 +222,24 @@ fn main() {
                                         }
                                     }
                                     Err(error) => {
-                                        println!("Unable to get file information: {}", error)
+                                        println!(
+                                            "{} {:?}",
+                                            format_colors(&String::from(
+                                                "$BOLD$Unable to get file information:$NORMAL$"
+                                            )),
+                                            error,
+                                        )
                                     }
                                 }
                             }
                         }
-                        Err(error) => println!("Unable to read directory: {}", error),
+                        Err(error) => println!(
+                            "{} {:?}",
+                            format_colors(&String::from(
+                                "$BOLD$Unable to read directory:$NORMAL$ {}"
+                            )),
+                            error
+                        ),
                     }
                 }
             }
@@ -221,7 +255,13 @@ fn main() {
                 match std::env::set_current_dir(path) {
                     Ok(_) => (),
                     Err(error) => {
-                        println!("Unable to change directory: {}", error)
+                        println!(
+                            "{} {:?}",
+                            format_colors(&String::from(
+                                "$BOLD$Unable to change directory:$NORMAL$"
+                            )),
+                            error,
+                        )
                     }
                 }
             }
