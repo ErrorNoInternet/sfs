@@ -182,9 +182,32 @@ fn main() {
         match tokens[0].as_str() {
             "quit" | "exit" | "q" => quit_sfs(),
             "ls" => {
+                let print_file = |path: &std::fs::DirEntry| {
+                    if path.file_type().unwrap().is_dir() {
+                        println!(
+                            "{}",
+                            format_colors(&format!("$BLUE${}", path.file_name().to_str().unwrap()))
+                        )
+                    } else {
+                        println!(
+                            "{}",
+                            format_colors(&format!(
+                                "$NORMAL${}",
+                                path.file_name().to_str().unwrap()
+                            ))
+                        )
+                    }
+                };
+
+                let mut display_all_files = false;
+
                 let mut input_paths = Vec::new();
-                for path in tokens.iter().skip(1) {
-                    input_paths.push(path.to_owned())
+                for token in tokens.iter().skip(1) {
+                    if token == "-a" || token == "--all" {
+                        display_all_files = true;
+                    } else {
+                        input_paths.push(token.to_owned())
+                    }
                 }
                 if input_paths.len() == 0 {
                     input_paths.push(String::from("."))
@@ -203,22 +226,12 @@ fn main() {
                             for path in paths {
                                 match path {
                                     Ok(path) => {
-                                        if path.file_type().unwrap().is_dir() {
-                                            println!(
-                                                "{}",
-                                                format_colors(&format!(
-                                                    "$BLUE${}",
-                                                    path.file_name().to_str().unwrap()
-                                                ))
-                                            )
+                                        if path.file_name().to_str().unwrap().starts_with(".") {
+                                            if display_all_files {
+                                                print_file(&path)
+                                            }
                                         } else {
-                                            println!(
-                                                "{}",
-                                                format_colors(&format!(
-                                                    "$NORMAL${}",
-                                                    path.file_name().to_str().unwrap()
-                                                ))
-                                            )
+                                            print_file(&path)
                                         }
                                     }
                                     Err(error) => {
