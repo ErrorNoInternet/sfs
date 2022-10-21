@@ -181,6 +181,28 @@ fn main() {
         }
         match tokens[0].as_str() {
             "quit" | "exit" | "q" => quit_sfs(),
+            "cd" => {
+                let path;
+                match tokens.iter().nth(1) {
+                    Some(result) => path = result,
+                    None => {
+                        println!("No path specified!");
+                        continue;
+                    }
+                }
+                match std::env::set_current_dir(path) {
+                    Ok(_) => (),
+                    Err(error) => {
+                        println!(
+                            "{} {:?}",
+                            format_colors(&String::from(
+                                "$BOLD$Unable to change directory:$NORMAL$"
+                            )),
+                            error,
+                        )
+                    }
+                }
+            }
             "ls" => {
                 let print_file = |path: &std::fs::DirEntry| {
                     if path.file_type().unwrap().is_dir() {
@@ -256,29 +278,8 @@ fn main() {
                     }
                 }
             }
-            "cd" => {
-                let path;
-                match tokens.iter().nth(1) {
-                    Some(result) => path = result,
-                    None => {
-                        println!("No path specified");
-                        continue;
-                    }
-                }
-                match std::env::set_current_dir(path) {
-                    Ok(_) => (),
-                    Err(error) => {
-                        println!(
-                            "{} {:?}",
-                            format_colors(&String::from(
-                                "$BOLD$Unable to change directory:$NORMAL$"
-                            )),
-                            error,
-                        )
-                    }
-                }
-            }
-            _ => println!("Unknown command"),
+            "pwd" => println!("{}", current_path),
+            _ => println!("Unknown command!"),
         }
     }
 }
