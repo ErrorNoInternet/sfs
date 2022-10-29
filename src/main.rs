@@ -1,12 +1,20 @@
+mod commands;
+mod utilities;
+
+use commands::{Command, Flag};
+use utilities::{debug_print, format_colors, generate_fernet, quit_sfs, tokenize};
+
 use rustyline::highlight::{Highlighter, MatchingBracketHighlighter};
 use rustyline::{
     completion::FilenameCompleter, error::ReadlineError, hint::HistoryHinter, Config, Editor,
 };
 use rustyline_derive::{Completer, Helper, Hinter, Validator};
 use serde_derive::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::borrow::Cow::{self, Owned};
+use std::time::{SystemTime, UNIX_EPOCH};
 use std::{fs, io::Write};
+
+use crate::commands::{ParsedCommand, ParsedFlag};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Configuration {
@@ -117,6 +125,48 @@ fn main() {
         return;
     }
 
+    let mut commands = Vec::new();
+    commands.push(Command {
+        name: String::from("quit"),
+        description: String::from("Quit SFS"),
+        flags: Vec::new(),
+        aliases: vec![String::from("q"), String::from("exit")],
+        callback: commands::quit_command,
+    });
+    commands.push(Command {
+        name: String::from("cd"),
+        description: String::from("Change your current working directory"),
+        flags: Vec::new(),
+        aliases: Vec::new(),
+        callback: commands::cd_command,
+    });
+    commands.push(Command {
+        name: String::from("ls"),
+        description: String::from("List all the files and folder in the specified directory"),
+        flags: vec![
+            Flag {
+                name: String::from("all"),
+                short_name: String::from("a"),
+                description: String::from("List hidden files as well"),
+                has_value: false,
+            },
+            Flag {
+                name: String::from("list"),
+                short_name: String::from("l"),
+                description: String::from("List one file for each line"),
+                has_value: false,
+            },
+            Flag {
+                name: String::from("columns"),
+                short_name: String::from("c"),
+                description: String::from("The amount of columns to print (grid view)"),
+                has_value: true,
+            },
+        ],
+        aliases: Vec::new(),
+        callback: commands::ls_command,
+    });
+
     let editor_configuration = Config::builder()
         .history_ignore_space(true)
         .completion_type(rustyline::CompletionType::List)
@@ -157,7 +207,6 @@ fn main() {
             Err(ReadlineError::Interrupted) => {
                 println!("Interrupted!");
                 input = String::new();
-                quit_sfs();
             }
             Err(ReadlineError::Eof) => {
                 println!("EOF!");
@@ -177,179 +226,97 @@ fn main() {
 
         let tokens = tokenize(&input);
         if configuration.debug_mode {
-            println!("{:?}", tokens);
+            debug_print(&format!("tokens: {:?}", tokens));
         }
-        match tokens[0].as_str() {
-            "quit" | "exit" | "q" => quit_sfs(),
-            "cd" => {
-                let path;
-                match tokens.iter().nth(1) {
-                    Some(result) => path = result,
-                    None => {
-                        println!("No path specified!");
-                        continue;
-                    }
-                }
-                match std::env::set_current_dir(path) {
-                    Ok(_) => (),
-                    Err(error) => {
-                        println!(
-                            "{} {:?}",
-                            format_colors(&String::from(
-                                "$BOLD$Unable to change directory:$NORMAL$"
-                            )),
-                            error,
-                        )
+        let first_token = match tokens.iter().nth(0) {
+            Some(token) => token,
+            None => continue,
+        };
+
+        let mut command_found = false;
+        for command in &commands {
+            let mut matched = false;
+            if &command.name == first_token {
+                matched = true;
+            } else {
+                for alias in &command.aliases {
+                    if alias == first_token {
+                        matched = true;
                     }
                 }
             }
-            "ls" => {
-                let print_file = |path: &std::fs::DirEntry| {
-                    if path.file_type().unwrap().is_dir() {
-                        println!(
-                            "{}",
-                            format_colors(&format!("$BLUE${}", path.file_name().to_str().unwrap()))
-                        )
-                    } else {
-                        println!(
-                            "{}",
-                            format_colors(&format!(
-                                "$NORMAL${}",
-                                path.file_name().to_str().unwrap()
-                            ))
-                        )
-                    }
-                };
-
-                let mut display_all_files = false;
-
-                let mut input_paths = Vec::new();
-                for token in tokens.iter().skip(1) {
-                    if token == "-a" || token == "--all" {
-                        display_all_files = true;
-                    } else {
-                        input_paths.push(token.to_owned())
-                    }
-                }
-                if input_paths.len() == 0 {
-                    input_paths.push(String::from("."))
+            if matched {
+                if configuration.debug_mode {
+                    debug_print(&format!("matched command: {:?}", command));
                 }
 
-                for input_path in input_paths {
-                    println!(
-                        "{}",
-                        format_colors(
-                            &String::from("$NORMAL$$BOLD$Directory listing for {}$NORMAL$")
-                                .replace("{}", &input_path)
-                        )
-                    );
-                    match fs::read_dir(input_path) {
-                        Ok(paths) => {
-                            for path in paths {
-                                match path {
-                                    Ok(path) => {
-                                        if path.file_name().to_str().unwrap().starts_with(".") {
-                                            if display_all_files {
-                                                print_file(&path)
-                                            }
-                                        } else {
-                                            print_file(&path)
-                                        }
-                                    }
-                                    Err(error) => {
-                                        println!(
-                                            "{} {:?}",
-                                            format_colors(&String::from(
-                                                "$BOLD$Unable to get file information:$NORMAL$"
-                                            )),
-                                            error,
-                                        )
-                                    }
+                let mut parsed_flags = Vec::new();
+                let mut matched_flag: Option<ParsedFlag> = None;
+                let mut looking_for_value = false;
+                'token_loop: for token in tokens.iter().skip(1) {
+                    if !looking_for_value {
+                        for flag in &command.flags {
+                            if &(String::from("--") + &flag.name) == token
+                                || &(String::from("-") + &flag.short_name) == token
+                            {
+                                matched_flag = Some(ParsedFlag {
+                                    name: Some(flag.name.clone()),
+                                    value: None,
+                                });
+                                if flag.has_value {
+                                    looking_for_value = true;
+                                    continue 'token_loop;
                                 }
                             }
                         }
-                        Err(error) => println!(
-                            "{} {:?}",
-                            format_colors(&String::from(
-                                "$BOLD$Unable to read directory:$NORMAL$ {}"
-                            )),
-                            error
-                        ),
                     }
+
+                    match matched_flag {
+                        Some(mut flag) => {
+                            if looking_for_value {
+                                looking_for_value = false;
+                                flag.value = Some(token.to_string());
+                            }
+                            parsed_flags.push(flag);
+                            matched_flag = None;
+                        }
+                        None => parsed_flags.push(ParsedFlag {
+                            name: None,
+                            value: Some(token.to_string()),
+                        }),
+                    };
                 }
+                if configuration.debug_mode {
+                    debug_print(&format!("parsed flags: {:?}", parsed_flags));
+                }
+
+                let command_start = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis();
+                (command.callback)(ParsedCommand {
+                    name: first_token.to_string(),
+                    flags: parsed_flags,
+                });
+                let command_end = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis();
+                if configuration.debug_mode {
+                    debug_print(&format!("command took {} ms", command_end - command_start))
+                }
+
+                command_found = true;
             }
-            "pwd" => println!("{}", current_path),
-            _ => println!("Unknown command!"),
+        }
+
+        if !command_found {
+            println!(
+            "{}",
+            format_colors(&String::from(
+                "$BOLD$Unknown command!$NORMAL$ Type $BOLD$`help`$NORMAL$ for a list of commands."
+            ))
+        );
         }
     }
-}
-
-fn tokenize(command: &String) -> Vec<String> {
-    let mut tokens = Vec::new();
-    let mut current_token = String::new();
-    let mut in_string = false;
-    for letter in command.chars() {
-        if letter == ' ' && !in_string {
-            if current_token.len() > 0 {
-                tokens.push(current_token);
-                current_token = String::new();
-            }
-            continue;
-        }
-        if letter == '"' && !in_string {
-            in_string = true;
-            if current_token.len() > 0 {
-                tokens.push(current_token);
-                current_token = String::new();
-            }
-            continue;
-        } else if letter == '"' && in_string {
-            in_string = false;
-            if current_token.len() > 0 {
-                tokens.push(current_token);
-                current_token = String::new();
-            }
-            continue;
-        }
-        current_token.push(letter);
-    }
-    if current_token.len() > 0 {
-        tokens.push(current_token);
-    }
-    tokens
-}
-
-fn generate_fernet(password: &String) -> fernet::Fernet {
-    let mut hasher = Sha256::new();
-    hasher.update(password.clone().into_bytes());
-    let result = format!("{:X}", hasher.finalize());
-    let mut key = String::new();
-    for (index, letter) in result.chars().enumerate() {
-        if index % 2 == 0 {
-            key.push(letter);
-        }
-    }
-    fernet::Fernet::new(&base64::encode(key)).unwrap()
-}
-
-fn format_colors(text: &String) -> String {
-    let mut text = text.clone();
-    text = text.replace("$NORMAL$", "\u{001b}[0m");
-    text = text.replace("$BOLD$", "\u{001b}[1m");
-
-    text = text.replace("$BLACK$", "\u{001b}[30m");
-    text = text.replace("$RED$", "\u{001b}[31m");
-    text = text.replace("$GREEN$", "\u{001b}[32m");
-    text = text.replace("$YELLOW$", "\u{001b}[33m");
-    text = text.replace("$BLUE$", "\u{001b}[34m");
-    text = text.replace("$MAGENTA$", "\u{001b}[35m");
-    text = text.replace("$CYAN$", "\u{001b}[36m");
-    text = text.replace("$WHITE$", "\u{001b}[37m");
-
-    text
-}
-
-fn quit_sfs() {
-    println!("Quitting...");
-    std::process::exit(0)
 }
