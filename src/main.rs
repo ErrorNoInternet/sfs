@@ -1,7 +1,7 @@
 mod commands;
 mod utilities;
 
-use commands::get_commands;
+use commands::{get_commands, Passable};
 use utilities::{debug_print, format_colors, generate_fernet, quit_sfs, tokenize};
 
 use rustyline::highlight::{Highlighter, MatchingBracketHighlighter};
@@ -11,6 +11,7 @@ use rustyline::{
 use rustyline_derive::{Completer, Helper, Hinter, Validator};
 use serde_derive::{Deserialize, Serialize};
 use std::borrow::Cow::{self, Owned};
+use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{fs, io::Write};
 
@@ -276,6 +277,15 @@ fn main() {
                     debug_print(&format!("parsed flags: {:?}", parsed_flags));
                 }
 
+                let mut contexts: HashMap<String, Passable> = HashMap::new();
+                for required_context in &command.contexts {
+                    match required_context.as_str() {
+                        "fernet" => contexts
+                            .insert(String::from("fernet"), Passable::Fernet(fernet.clone())),
+                        _ => None,
+                    };
+                }
+
                 let command_start = SystemTime::now()
                     .duration_since(UNIX_EPOCH)
                     .unwrap()
@@ -283,6 +293,7 @@ fn main() {
                 (command.callback)(ParsedCommand {
                     name: first_token.to_string(),
                     flags: parsed_flags,
+                    contexts,
                 });
                 let command_end = SystemTime::now()
                     .duration_since(UNIX_EPOCH)

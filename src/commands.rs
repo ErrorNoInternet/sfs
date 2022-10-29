@@ -1,6 +1,11 @@
 use crate::utilities::{format_colors, quit_sfs};
 
+use std::collections::HashMap;
 use std::fs;
+
+pub enum Passable {
+    Fernet(fernet::Fernet),
+}
 
 #[derive(Debug)]
 pub struct Command {
@@ -9,12 +14,13 @@ pub struct Command {
     pub flags: Vec<Flag>,
     pub aliases: Vec<String>,
     pub callback: fn(ParsedCommand),
+    pub contexts: Vec<String>,
 }
 
-#[derive(Debug)]
 pub struct ParsedCommand {
     pub name: String,
     pub flags: Vec<ParsedFlag>,
+    pub contexts: HashMap<String, Passable>,
 }
 
 #[derive(Debug)]
@@ -39,6 +45,7 @@ pub fn get_commands() -> Vec<Command> {
         flags: Vec::new(),
         aliases: vec![String::from("h"), String::from("?")],
         callback: help_command,
+        contexts: Vec::new(),
     });
     commands.push(Command {
         name: String::from("quit"),
@@ -46,6 +53,7 @@ pub fn get_commands() -> Vec<Command> {
         flags: Vec::new(),
         aliases: vec![String::from("q"), String::from("exit")],
         callback: quit_command,
+        contexts: Vec::new(),
     });
     commands.push(Command {
         name: String::from("cd"),
@@ -53,6 +61,7 @@ pub fn get_commands() -> Vec<Command> {
         flags: Vec::new(),
         aliases: Vec::new(),
         callback: cd_command,
+        contexts: Vec::new(),
     });
     commands.push(Command {
         name: String::from("ls"),
@@ -81,6 +90,33 @@ pub fn get_commands() -> Vec<Command> {
         ],
         aliases: Vec::new(),
         callback: ls_command,
+        contexts: Vec::new(),
+    });
+    commands.push(Command {
+        name: String::from("encrypt"),
+        description: String::from("Encrypt file(s) with your password"),
+        flags: vec![Flag {
+            name: String::from("silent"),
+            short_name: String::from("-s"),
+            description: String::from("Do not display a progress bar"),
+            has_value: false,
+        }],
+        aliases: Vec::new(),
+        callback: encrypt_command,
+        contexts: vec![String::from("fernet")],
+    });
+    commands.push(Command {
+        name: String::from("decrypt"),
+        description: String::from("Decrypt file(s) with your password"),
+        flags: vec![Flag {
+            name: String::from("silent"),
+            short_name: String::from("-s"),
+            description: String::from("Do not display a progress bar"),
+            has_value: false,
+        }],
+        aliases: Vec::new(),
+        callback: decrypt_command,
+        contexts: vec![String::from("fernet")],
     });
     commands
 }
@@ -298,4 +334,14 @@ pub fn ls_command(command: ParsedCommand) {
             println!();
         }
     }
+}
+
+pub fn encrypt_command(command: ParsedCommand) {
+    let fernet = match command.contexts.get(&String::from("fernet")).unwrap() {
+        Passable::Fernet(fernet) => fernet,
+    };
+}
+
+pub fn decrypt_command(_command: ParsedCommand) {
+    println!("Not implemented")
 }
