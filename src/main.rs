@@ -88,7 +88,7 @@ fn main() {
 
     print!("{}\nPassword: ", format_colors(&String::from("$BOLD$Please enter your password (used to encrypt/decrypt files, only for this session).$NORMAL$")));
     std::io::stdout().flush().unwrap();
-    let password;
+    let mut password;
     match rpassword::read_password() {
         Ok(result) => password = result,
         Err(error) => {
@@ -106,9 +106,13 @@ fn main() {
     }
     print!("Repeat Password: ");
     std::io::stdout().flush().unwrap();
-    let repeat_password;
     match rpassword::read_password() {
-        Ok(result) => repeat_password = result,
+        Ok(repeat_password) => {
+            if password != repeat_password {
+                println!("Passwords do not match!");
+                return;
+            }
+        }
         Err(error) => {
             println!(
                 "{} {:?}",
@@ -118,14 +122,9 @@ fn main() {
             std::process::exit(1)
         }
     }
-    if password == repeat_password {
-        let fernet = generate_fernet(&password);
-    } else {
-        println!("Passwords do not match!");
-        return;
-    }
-
-    let commands = get_commands();
+    let fernet = generate_fernet(&password);
+    password = String::new();
+    password.clear();
 
     let editor_configuration = Config::builder()
         .history_ignore_space(true)
