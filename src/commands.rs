@@ -185,7 +185,7 @@ pub fn cd_command(command: ParsedCommand) {
 pub fn ls_command(command: ParsedCommand) {
     let mut display_all_files = false;
     let mut list_view = false;
-    let mut grid_columns = 5;
+    let mut grid_columns = 7;
     let mut input_paths = Vec::new();
 
     for flag in command.flags {
@@ -193,7 +193,7 @@ pub fn ls_command(command: ParsedCommand) {
             match flag.name.unwrap().as_str() {
                 "all" => display_all_files = true,
                 "list" => list_view = true,
-                "columns" => grid_columns = flag.value.unwrap().parse().unwrap_or(5),
+                "columns" => grid_columns = flag.value.unwrap().parse().unwrap_or(7),
                 _ => (),
             }
         } else if flag.value.is_some() {
