@@ -35,7 +35,7 @@ pub fn get_commands() -> Vec<Command> {
     let mut commands = Vec::new();
     commands.push(Command {
         name: String::from("help"),
-        description: String::from("Get help for a command"),
+        description: String::from("Get help for a command, or list all commands if none specified"),
         flags: Vec::new(),
         aliases: vec![String::from("h"), String::from("?")],
         callback: help_command,
@@ -56,7 +56,9 @@ pub fn get_commands() -> Vec<Command> {
     });
     commands.push(Command {
         name: String::from("ls"),
-        description: String::from("List all the files and folder in the specified directory"),
+        description: String::from(
+            "List all the files and folder in the specified directory (grid view)",
+        ),
         flags: vec![
             Flag {
                 name: String::from("all"),
@@ -67,13 +69,13 @@ pub fn get_commands() -> Vec<Command> {
             Flag {
                 name: String::from("list"),
                 short_name: String::from("l"),
-                description: String::from("List one file for each line"),
+                description: String::from("List one file for each line (list view)"),
                 has_value: false,
             },
             Flag {
                 name: String::from("columns"),
                 short_name: String::from("c"),
-                description: String::from("The amount of columns to print (grid view)"),
+                description: String::from("The amount of columns to print (for grid view)"),
                 has_value: true,
             },
         ],
