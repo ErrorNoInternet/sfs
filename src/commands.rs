@@ -280,6 +280,10 @@ pub fn ls_command(command: ParsedCommand) {
                         }
                     }
                 }
+                if !list_view {
+                    println!();
+                }
+                current_column = 0;
             }
             Err(error) => println!(
                 "{} {:?}",
@@ -287,13 +291,8 @@ pub fn ls_command(command: ParsedCommand) {
                 error
             ),
         }
-
-        if !list_view {
-            println!();
-        }
         if index != input_paths.len() - 1 {
             println!();
         }
-        current_column = 0;
     }
 }
