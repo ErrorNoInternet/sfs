@@ -342,6 +342,8 @@ pub fn encrypt_command(command: ParsedCommand) {
     };
 }
 
-pub fn decrypt_command(_command: ParsedCommand) {
-    println!("Not implemented")
+pub fn decrypt_command(command: ParsedCommand) {
+    let fernet = match command.contexts.get(&String::from("fernet")).unwrap() {
+        Passable::Fernet(fernet) => fernet,
+    };
 }
