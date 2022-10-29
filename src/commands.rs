@@ -200,6 +200,9 @@ pub fn ls_command(command: ParsedCommand) {
             input_paths.push(flag.value.unwrap())
         }
     }
+    if grid_columns < 1 {
+        grid_columns = 1
+    }
     if input_paths.len() == 0 {
         input_paths.push(String::from("."))
     }
