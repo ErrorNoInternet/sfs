@@ -1,7 +1,7 @@
 mod commands;
 mod utilities;
 
-use commands::{Command, Flag};
+use commands::get_commands;
 use utilities::{debug_print, format_colors, generate_fernet, quit_sfs, tokenize};
 
 use rustyline::highlight::{Highlighter, MatchingBracketHighlighter};
@@ -125,47 +125,7 @@ fn main() {
         return;
     }
 
-    let mut commands = Vec::new();
-    commands.push(Command {
-        name: String::from("quit"),
-        description: String::from("Quit SFS"),
-        flags: Vec::new(),
-        aliases: vec![String::from("q"), String::from("exit")],
-        callback: commands::quit_command,
-    });
-    commands.push(Command {
-        name: String::from("cd"),
-        description: String::from("Change your current working directory"),
-        flags: Vec::new(),
-        aliases: Vec::new(),
-        callback: commands::cd_command,
-    });
-    commands.push(Command {
-        name: String::from("ls"),
-        description: String::from("List all the files and folder in the specified directory"),
-        flags: vec![
-            Flag {
-                name: String::from("all"),
-                short_name: String::from("a"),
-                description: String::from("List hidden files as well"),
-                has_value: false,
-            },
-            Flag {
-                name: String::from("list"),
-                short_name: String::from("l"),
-                description: String::from("List one file for each line"),
-                has_value: false,
-            },
-            Flag {
-                name: String::from("columns"),
-                short_name: String::from("c"),
-                description: String::from("The amount of columns to print (grid view)"),
-                has_value: true,
-            },
-        ],
-        aliases: Vec::new(),
-        callback: commands::ls_command,
-    });
+    let commands = get_commands();
 
     let editor_configuration = Config::builder()
         .history_ignore_space(true)
@@ -246,6 +206,7 @@ fn main() {
                 }
             }
             if matched {
+                command_found = true;
                 if configuration.debug_mode {
                     debug_print(&format!("matched command: {:?}", command));
                 }
@@ -305,18 +266,16 @@ fn main() {
                 if configuration.debug_mode {
                     debug_print(&format!("command took {} ms", command_end - command_start))
                 }
-
-                command_found = true;
             }
         }
 
         if !command_found {
             println!(
-            "{}",
-            format_colors(&String::from(
-                "$BOLD$Unknown command!$NORMAL$ Type $BOLD$`help`$NORMAL$ for a list of commands."
-            ))
-        );
+                "{}",
+                format_colors(&String::from(
+                    "$BOLD$Unknown command!$NORMAL$ Type $BOLD$`help`$NORMAL$ for a list of commands."
+                ))
+            );
         }
     }
 }

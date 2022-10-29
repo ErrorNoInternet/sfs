@@ -31,6 +31,122 @@ pub struct ParsedFlag {
     pub value: Option<String>,
 }
 
+pub fn get_commands() -> Vec<Command> {
+    let mut commands = Vec::new();
+    commands.push(Command {
+        name: String::from("help"),
+        description: String::from("Get help for a command"),
+        flags: Vec::new(),
+        aliases: vec![String::from("h"), String::from("?")],
+        callback: help_command,
+    });
+    commands.push(Command {
+        name: String::from("quit"),
+        description: String::from("Quit SFS"),
+        flags: Vec::new(),
+        aliases: vec![String::from("q"), String::from("exit")],
+        callback: quit_command,
+    });
+    commands.push(Command {
+        name: String::from("cd"),
+        description: String::from("Change your current working directory"),
+        flags: Vec::new(),
+        aliases: Vec::new(),
+        callback: cd_command,
+    });
+    commands.push(Command {
+        name: String::from("ls"),
+        description: String::from("List all the files and folder in the specified directory"),
+        flags: vec![
+            Flag {
+                name: String::from("all"),
+                short_name: String::from("a"),
+                description: String::from("List hidden files as well"),
+                has_value: false,
+            },
+            Flag {
+                name: String::from("list"),
+                short_name: String::from("l"),
+                description: String::from("List one file for each line"),
+                has_value: false,
+            },
+            Flag {
+                name: String::from("columns"),
+                short_name: String::from("c"),
+                description: String::from("The amount of columns to print (grid view)"),
+                has_value: true,
+            },
+        ],
+        aliases: Vec::new(),
+        callback: ls_command,
+    });
+    commands
+}
+
+pub fn help_command(command: ParsedCommand) {
+    for flag in command.flags {
+        if flag.value.is_some() {
+            let input_command = flag.value.unwrap();
+            let mut command_found = false;
+            for command in get_commands() {
+                let mut matched = false;
+                if command.name == input_command {
+                    matched = true;
+                } else {
+                    for alias in &command.aliases {
+                        if alias == &input_command {
+                            matched = true;
+                        }
+                    }
+                }
+                if matched {
+                    command_found = true;
+
+                    let mut alias_list = Vec::new();
+                    for alias in command.aliases {
+                        alias_list.push(format!("$BOLD$`{}`$NORMAL$", alias))
+                    }
+                    let mut aliases = String::new();
+                    if alias_list.len() > 0 {
+                        aliases = format!(" (AKA {})", alias_list.join("/"));
+                    }
+                    let mut flags = String::from("None");
+                    if command.flags.len() > 0 {
+                        flags = String::new();
+                    }
+                    for flag in command.flags {
+                        let mut has_value = "";
+                        if flag.has_value {
+                            has_value = " <value>"
+                        }
+                        flags += format!(
+                            "\n\t\t$BOLD$-{}$NORMAL$, $BOLD$--{}{}$NORMAL$\n\t\t\t{}",
+                            flag.short_name, flag.name, has_value, flag.description
+                        )
+                        .as_str()
+                    }
+                    println!(
+                        "{}",
+                        format_colors(&format!(
+                            "$BOLD$`{}`$NORMAL${}:\n\t{}\n\n\t$BOLD$Flags$NORMAL$: {}",
+                            command.name, aliases, command.description, flags,
+                        ))
+                    );
+                }
+            }
+            if !command_found {
+                println!(
+                    "{}",
+                    format_colors(&format!(
+                        "Unknown command $BOLD$`{}`$NORMAL$.",
+                        input_command.as_str()
+                    ))
+                )
+            }
+        }
+    }
+}
+
 pub fn quit_command(_: ParsedCommand) {
     quit_sfs();
 }
@@ -153,7 +269,7 @@ pub fn ls_command(command: ParsedCommand) {
             }
             Err(error) => println!(
                 "{} {:?}",
-                format_colors(&String::from("$BOLD$Unable to read directory:$NORMAL$ {}")),
+                format_colors(&String::from("$BOLD$Unable to read directory:$NORMAL$")),
                 error
             ),
         }
