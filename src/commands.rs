@@ -210,10 +210,10 @@ pub fn ls_command(command: ParsedCommand) {
     if padding <= 3 {
         list_view = true;
     }
-    let mut print_file = |path: &std::fs::DirEntry| {
+    let print_file = |path: &std::fs::DirEntry, current_column: &mut u16| {
         if list_view == false {
-            if current_column == grid_columns {
-                current_column = 0;
+            if current_column == &grid_columns {
+                *current_column = 0;
                 println!();
             }
 
@@ -239,7 +239,7 @@ pub fn ls_command(command: ParsedCommand) {
                     padding = padding,
                 )
             }
-            current_column += 1;
+            *current_column += 1;
         } else {
             if path.file_type().unwrap().is_dir() {
                 println!(
@@ -255,7 +255,7 @@ pub fn ls_command(command: ParsedCommand) {
         }
     };
 
-    for input_path in input_paths {
+    for (index, input_path) in input_paths.iter().enumerate() {
         match fs::read_dir(input_path) {
             Ok(paths) => {
                 for path in paths {
@@ -263,10 +263,10 @@ pub fn ls_command(command: ParsedCommand) {
                         Ok(path) => {
                             if path.file_name().to_str().unwrap().starts_with(".") {
                                 if display_all_files {
-                                    print_file(&path)
+                                    print_file(&path, &mut current_column)
                                 }
                             } else {
-                                print_file(&path)
+                                print_file(&path, &mut current_column)
                             }
                         }
                         Err(error) => {
@@ -287,8 +287,13 @@ pub fn ls_command(command: ParsedCommand) {
                 error
             ),
         }
+
         if !list_view {
             println!();
         }
+        if index != input_paths.len() - 1 {
+            println!();
+        }
+        current_column = 0;
     }
 }
