@@ -28,7 +28,6 @@ pub fn format_colors(text: &String) -> String {
 
 pub fn generate_fernet(password: &String) -> fernet::Fernet {
     let mut result = password.to_owned();
-
     for _ in 0..128 {
         let mut hasher = Sha256::new();
         hasher.update(result.clone().into_bytes());

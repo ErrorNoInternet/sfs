@@ -137,6 +137,8 @@ fn main() {
         highlighter: MatchingBracketHighlighter::new(),
     };
     editor.set_helper(Some(autocomplete_helper));
+
+    let commands = get_commands();
     loop {
         println!();
 
@@ -191,6 +193,30 @@ fn main() {
             Some(token) => token,
             None => continue,
         };
+        if first_token.starts_with("!") {
+            let mut characters = input.chars();
+            characters.next();
+            let tokens = tokenize(&characters.as_str().to_string());
+            match std::process::Command::new(&tokens[0])
+                .args(&tokens[1..])
+                .spawn()
+            {
+                Ok(mut process) => match process.wait() {
+                    Ok(_) => (),
+                    Err(error) => println!(
+                        "{} {:?}",
+                        format_colors(&String::from("$BOLD$Process already exited:$NORMAL$")),
+                        error,
+                    ),
+                },
+                Err(error) => println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to launch subprocess:$NORMAL$")),
+                    error,
+                ),
+            }
+            continue;
+        }
 
         let mut command_found = false;
         for command in &commands {
