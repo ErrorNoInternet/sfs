@@ -339,9 +339,33 @@ pub fn ls_command(command: ParsedCommand) {
 }
 
 pub fn encrypt_command(command: ParsedCommand) {
-    if let Context::Fernet(fernet) = command.contexts.get(&String::from("fernet")).unwrap() {};
+    let fernet = match command.contexts.get(&String::from("fernet")) {
+        Some(fernet) => match fernet {
+            Context::Fernet(fernet) => fernet,
+            _ => unreachable!(),
+        },
+        None => {
+            println!(
+                "{} Fernet was not passed by SFS!",
+                format_colors(&String::from("$BOLD$Fatal error:$NORMAL$")),
+            );
+            return;
+        }
+    };
 }
 
 pub fn decrypt_command(command: ParsedCommand) {
-    if let Context::Fernet(fernet) = command.contexts.get(&String::from("fernet")).unwrap() {};
+    let fernet = match command.contexts.get(&String::from("fernet")) {
+        Some(fernet) => match fernet {
+            Context::Fernet(fernet) => fernet,
+            _ => unreachable!(),
+        },
+        None => {
+            println!(
+                "{} Fernet was not passed by SFS!",
+                format_colors(&String::from("$BOLD$Fatal error:$NORMAL$")),
+            );
+            return;
+        }
+    };
 }
