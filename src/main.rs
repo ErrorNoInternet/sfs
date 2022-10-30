@@ -1,7 +1,7 @@
 mod commands;
 mod utilities;
 
-use commands::{get_commands, Context};
+use commands::{get_commands, Context, ParsedCommand, ParsedFlag};
 use utilities::{debug_print, format_colors, generate_fernet, quit_sfs, tokenize};
 
 use rustyline::highlight::{Highlighter, MatchingBracketHighlighter};
@@ -15,12 +15,19 @@ use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{fs, io::Write};
 
-use crate::commands::{ParsedCommand, ParsedFlag};
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LsCommandConfiguration {
+    display_all_files: bool,
+    list_view: bool,
+    grid_columns: u16,
+    no_colors: bool,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Configuration {
     prompt: String,
     debug_mode: bool,
+    ls_command: LsCommandConfiguration,
 }
 
 impl Configuration {
@@ -28,6 +35,12 @@ impl Configuration {
         Configuration {
             prompt: String::from("$BOLD$$BLUE$$PATH$ >$NORMAL$ "),
             debug_mode: false,
+            ls_command: LsCommandConfiguration {
+                display_all_files: false,
+                list_view: false,
+                grid_columns: 7,
+                no_colors: false,
+            },
         }
     }
 }

@@ -89,10 +89,16 @@ pub fn get_commands() -> Vec<Command> {
                 description: String::from("The amount of columns to print (for grid view)"),
                 has_value: true,
             },
+            Flag {
+                name: String::from("no-colors"),
+                short_name: String::from("n"),
+                description: String::from("Do not display colors"),
+                has_value: false,
+            },
         ],
         aliases: Vec::new(),
         callback: ls_command,
-        contexts: Vec::new(),
+        contexts: vec![String::from("configuration")],
     });
     commands.push(Command {
         name: String::from("encrypt"),
@@ -221,9 +227,24 @@ pub fn cd_command(command: ParsedCommand) {
 }
 
 pub fn ls_command(command: ParsedCommand) {
-    let mut display_all_files = false;
-    let mut list_view = false;
-    let mut grid_columns = 7;
+    let configuration = match command.contexts.get(&String::from("configuration")) {
+        Some(configuration) => match configuration {
+            Context::Configuration(configuration) => configuration,
+            _ => unreachable!(),
+        },
+        None => {
+            println!(
+                "{} Configuration was not passed by SFS!",
+                format_colors(&String::from("$BOLD$Fatal error:$NORMAL$")),
+            );
+            return;
+        }
+    };
+
+    let mut display_all_files = configuration.ls_command.display_all_files;
+    let mut list_view = configuration.ls_command.list_view;
+    let mut grid_columns = configuration.ls_command.grid_columns;
+    let mut no_colors = configuration.ls_command.no_colors;
     let mut input_paths = Vec::new();
 
     for flag in command.flags {
@@ -231,7 +252,8 @@ pub fn ls_command(command: ParsedCommand) {
             match flag.name.unwrap().as_str() {
                 "all" => display_all_files = true,
                 "list" => list_view = true,
-                "columns" => grid_columns = flag.value.unwrap().parse().unwrap_or(7),
+                "columns" => grid_columns = flag.value.unwrap().parse().unwrap_or(grid_columns),
+                "no-colors" => no_colors = true,
                 _ => (),
             }
         } else if flag.value.is_some() {
@@ -265,7 +287,7 @@ pub fn ls_command(command: ParsedCommand) {
                 }
                 file_name += "..."
             }
-            if path.file_type().unwrap().is_dir() {
+            if path.file_type().unwrap().is_dir() && !no_colors {
                 print!(
                     "{}{: <padding$}",
                     format_colors(&String::from("$BLUE$")),
@@ -282,7 +304,7 @@ pub fn ls_command(command: ParsedCommand) {
             }
             *current_column += 1;
         } else {
-            if path.file_type().unwrap().is_dir() {
+            if path.file_type().unwrap().is_dir() && !no_colors {
                 println!(
                     "{}",
                     format_colors(&format!("$BLUE${}", path.file_name().to_str().unwrap()))
