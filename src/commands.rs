@@ -361,7 +361,7 @@ pub fn ls_command(command: ParsedCommand) {
 }
 
 pub fn encrypt_command(command: ParsedCommand) {
-    let fernet = match command.contexts.get(&String::from("fernet")) {
+    let _fernet = match command.contexts.get(&String::from("fernet")) {
         Some(fernet) => match fernet {
             Context::Fernet(fernet) => fernet,
             _ => unreachable!(),
@@ -377,7 +377,7 @@ pub fn encrypt_command(command: ParsedCommand) {
 }
 
 pub fn decrypt_command(command: ParsedCommand) {
-    let fernet = match command.contexts.get(&String::from("fernet")) {
+    let _fernet = match command.contexts.get(&String::from("fernet")) {
         Some(fernet) => match fernet {
             Context::Fernet(fernet) => fernet,
             _ => unreachable!(),
