@@ -1,7 +1,7 @@
 mod commands;
 mod utilities;
 
-use commands::{get_commands, Context, ParsedCommand, ParsedFlag};
+use commands::{get_commands, Context, LsCommandConfiguration, ParsedCommand, ParsedFlag};
 use utilities::{debug_print, format_colors, generate_fernet, quit_sfs, tokenize};
 
 use rustyline::highlight::{Highlighter, MatchingBracketHighlighter};
@@ -14,15 +14,6 @@ use std::borrow::Cow::{self, Owned};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{fs, io::Write};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LsCommandConfiguration {
-    display_all_files: bool,
-    list_view: bool,
-    grid_columns: u16,
-    file_color: String,
-    folder_color: String,
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Configuration {

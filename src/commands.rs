@@ -1,6 +1,8 @@
 use crate::utilities::{format_colors, quit_sfs};
 use crate::Configuration;
 
+use serde_derive::{Deserialize, Serialize};
+
 use std::collections::HashMap;
 use std::fs;
 
@@ -37,6 +39,15 @@ pub struct Flag {
 pub struct ParsedFlag {
     pub name: Option<String>,
     pub value: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LsCommandConfiguration {
+    pub display_all_files: bool,
+    pub list_view: bool,
+    pub grid_columns: u16,
+    pub file_color: String,
+    pub folder_color: String,
 }
 
 pub fn get_commands() -> Vec<Command> {
