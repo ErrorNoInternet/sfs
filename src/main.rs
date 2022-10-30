@@ -20,7 +20,8 @@ pub struct LsCommandConfiguration {
     display_all_files: bool,
     list_view: bool,
     grid_columns: u16,
-    no_colors: bool,
+    file_color: String,
+    folder_color: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -39,7 +40,8 @@ impl Configuration {
                 display_all_files: false,
                 list_view: false,
                 grid_columns: 7,
-                no_colors: false,
+                file_color: String::from(""),
+                folder_color: String::from("$BLUE$"),
             },
         }
     }

@@ -89,12 +89,6 @@ pub fn get_commands() -> Vec<Command> {
                 description: String::from("The amount of columns to print (for grid view)"),
                 has_value: true,
             },
-            Flag {
-                name: String::from("no-colors"),
-                short_name: String::from("n"),
-                description: String::from("Do not display colors"),
-                has_value: false,
-            },
         ],
         aliases: Vec::new(),
         callback: ls_command,
@@ -244,7 +238,6 @@ pub fn ls_command(command: ParsedCommand) {
     let mut display_all_files = configuration.ls_command.display_all_files;
     let mut list_view = configuration.ls_command.list_view;
     let mut grid_columns = configuration.ls_command.grid_columns;
-    let mut no_colors = configuration.ls_command.no_colors;
     let mut input_paths = Vec::new();
 
     for flag in command.flags {
@@ -253,7 +246,6 @@ pub fn ls_command(command: ParsedCommand) {
                 "all" => display_all_files = true,
                 "list" => list_view = true,
                 "columns" => grid_columns = flag.value.unwrap().parse().unwrap_or(grid_columns),
-                "no-colors" => no_colors = true,
                 _ => (),
             }
         } else if flag.value.is_some() {
@@ -287,32 +279,40 @@ pub fn ls_command(command: ParsedCommand) {
                 }
                 file_name += "..."
             }
-            if path.file_type().unwrap().is_dir() && !no_colors {
+            if path.file_type().unwrap().is_dir() {
                 print!(
                     "{}{: <padding$}",
-                    format_colors(&String::from("$BLUE$")),
+                    format_colors(&configuration.ls_command.folder_color),
                     file_name,
                     padding = padding,
                 )
             } else {
                 print!(
                     "{}{: <padding$}",
-                    format_colors(&String::from("")),
+                    format_colors(&configuration.ls_command.file_color),
                     file_name,
                     padding = padding,
                 )
             }
             *current_column += 1;
         } else {
-            if path.file_type().unwrap().is_dir() && !no_colors {
+            if path.file_type().unwrap().is_dir() {
                 println!(
                     "{}",
-                    format_colors(&format!("$BLUE${}", path.file_name().to_str().unwrap()))
+                    format_colors(&format!(
+                        "{}{}",
+                        configuration.ls_command.folder_color,
+                        path.file_name().to_str().unwrap()
+                    ))
                 )
             } else {
                 println!(
                     "{}",
-                    format_colors(&format!("{}", path.file_name().to_str().unwrap()))
+                    format_colors(&format!(
+                        "{}{}",
+                        configuration.ls_command.file_color,
+                        path.file_name().to_str().unwrap()
+                    ))
                 )
             }
         }
