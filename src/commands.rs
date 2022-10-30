@@ -1,9 +1,11 @@
 use crate::utilities::{format_colors, quit_sfs};
+use crate::Configuration;
 
 use std::collections::HashMap;
 use std::fs;
 
-pub enum Passable {
+pub enum Context {
+    Configuration(Configuration),
     Fernet(fernet::Fernet),
 }
 
@@ -20,7 +22,7 @@ pub struct Command {
 pub struct ParsedCommand {
     pub name: String,
     pub flags: Vec<ParsedFlag>,
-    pub contexts: HashMap<String, Passable>,
+    pub contexts: HashMap<String, Context>,
 }
 
 #[derive(Debug)]
@@ -337,13 +339,9 @@ pub fn ls_command(command: ParsedCommand) {
 }
 
 pub fn encrypt_command(command: ParsedCommand) {
-    let fernet = match command.contexts.get(&String::from("fernet")).unwrap() {
-        Passable::Fernet(fernet) => fernet,
-    };
+    if let Context::Fernet(fernet) = command.contexts.get(&String::from("fernet")).unwrap() {};
 }
 
 pub fn decrypt_command(command: ParsedCommand) {
-    let fernet = match command.contexts.get(&String::from("fernet")).unwrap() {
-        Passable::Fernet(fernet) => fernet,
-    };
+    if let Context::Fernet(fernet) = command.contexts.get(&String::from("fernet")).unwrap() {};
 }

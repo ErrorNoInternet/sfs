@@ -1,7 +1,7 @@
 mod commands;
 mod utilities;
 
-use commands::{get_commands, Passable};
+use commands::{get_commands, Context};
 use utilities::{debug_print, format_colors, generate_fernet, quit_sfs, tokenize};
 
 use rustyline::highlight::{Highlighter, MatchingBracketHighlighter};
@@ -17,8 +17,8 @@ use std::{fs, io::Write};
 
 use crate::commands::{ParsedCommand, ParsedFlag};
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Configuration {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Configuration {
     prompt: String,
     debug_mode: bool,
 }
@@ -277,11 +277,16 @@ fn main() {
                     debug_print(&format!("parsed flags: {:?}", parsed_flags));
                 }
 
-                let mut contexts: HashMap<String, Passable> = HashMap::new();
+                let mut contexts: HashMap<String, Context> = HashMap::new();
                 for required_context in &command.contexts {
                     match required_context.as_str() {
-                        "fernet" => contexts
-                            .insert(String::from("fernet"), Passable::Fernet(fernet.clone())),
+                        "configuration" => contexts.insert(
+                            String::from("configuration"),
+                            Context::Configuration(configuration.clone()),
+                        ),
+                        "fernet" => {
+                            contexts.insert(String::from("fernet"), Context::Fernet(fernet.clone()))
+                        }
                         _ => None,
                     };
                 }
