@@ -156,7 +156,7 @@ fn main() {
 
     let commands = get_commands();
     loop {
-        println!();
+        println!("{}", format_colors(&String::new()));
 
         let current_path;
         match std::env::current_dir() {
