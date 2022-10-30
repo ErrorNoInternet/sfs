@@ -298,21 +298,15 @@ pub fn ls_command(command: ParsedCommand) {
         } else {
             if path.file_type().unwrap().is_dir() {
                 println!(
-                    "{}",
-                    format_colors(&format!(
-                        "{}{}",
-                        configuration.ls_command.folder_color,
-                        path.file_name().to_str().unwrap()
-                    ))
+                    "{}{}",
+                    format_colors(&configuration.ls_command.folder_color),
+                    path.file_name().to_str().unwrap()
                 )
             } else {
                 println!(
-                    "{}",
-                    format_colors(&format!(
-                        "{}{}",
-                        configuration.ls_command.file_color,
-                        path.file_name().to_str().unwrap()
-                    ))
+                    "{}{}",
+                    format_colors(&configuration.ls_command.file_color),
+                    path.file_name().to_str().unwrap()
                 )
             }
         }
