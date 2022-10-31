@@ -71,12 +71,41 @@ fn main() {
     fs::create_dir_all(&configuration_path).expect("Unable to create configuration directory");
     let configuration_string =
         match fs::read_to_string(configuration_path.to_owned() + "configuration.toml") {
-            Ok(configuration) => configuration,
+            Ok(configuration) => configuration.trim().to_string(),
             Err(_) => String::new(),
         };
     let configuration: Configuration = match toml::from_str(&configuration_string.as_str()) {
         Ok(configuration) => configuration,
         Err(_) => {
+            if !configuration_string.is_empty() {
+                let mut input = String::new();
+                loop {
+                    if input.to_lowercase().starts_with("n") {
+                        return;
+                    } else if input.to_lowercase().starts_with("y") {
+                        println!();
+                        break;
+                    } else {
+                        print!("{}", format_colors(&String::from("Your configuration file seems to be corrupted/incomplete. Would you like to overwrite it with a new one? $BOLD$Y/N:$NORMAL$ ")));
+                        std::io::stdout().flush().unwrap();
+                        input.clear();
+                        match std::io::stdin().read_line(&mut input) {
+                            Ok(_) => (),
+                            Err(error) => {
+                                println!(
+                                    "{} {:?}",
+                                    format_colors(&String::from(
+                                        "$BOLD$Unable to read input:$NORMAL$"
+                                    )),
+                                    error
+                                );
+                                std::process::exit(1)
+                            }
+                        }
+                    }
+                }
+            }
+
             let configuration = Configuration::default();
             match fs::write(
                 configuration_path.to_owned() + "configuration.toml",
@@ -93,7 +122,10 @@ fn main() {
         }
     };
 
-    print!("{}\nPassword: ", format_colors(&String::from("$BOLD$Please enter your password (used to encrypt/decrypt files, only for this session).$NORMAL$")));
+    if configuration_string.is_empty() {
+        println!("{}", format_colors(&format!("$BOLD$Welcome to $BLUE$SFS$NORMAL$$BOLD$ shell! This message will only appear once.\n$BOLD$Please enter a password. This password is used to encrypt/decrypt your files, and you must re-enter it every time you launch SFS.$NORMAL$")));
+    }
+    print!("Password: ");
     std::io::stdout().flush().unwrap();
     let mut password;
     match rpassword::read_password() {
