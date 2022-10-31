@@ -12,9 +12,15 @@ pub enum Context {
 }
 
 #[derive(Debug)]
+pub struct CommandMetadata {
+    pub description: String,
+    pub arguments: Vec<String>,
+}
+
+#[derive(Debug)]
 pub struct Command {
     pub name: String,
-    pub description: String,
+    pub metadata: CommandMetadata,
     pub flags: Vec<Flag>,
     pub aliases: Vec<String>,
     pub callback: fn(ParsedCommand),
@@ -54,7 +60,12 @@ pub fn get_commands() -> Vec<Command> {
     let mut commands = Vec::new();
     commands.push(Command {
         name: String::from("help"),
-        description: String::from("Get help for a command, or list all commands if none specified"),
+        metadata: CommandMetadata {
+            description: String::from(
+                "Get help for a command, or list all commands if none specified",
+            ),
+            arguments: vec![String::from("(COMMAND)...")],
+        },
         flags: Vec::new(),
         aliases: vec![String::from("h"), String::from("?")],
         callback: help_command,
@@ -62,7 +73,10 @@ pub fn get_commands() -> Vec<Command> {
     });
     commands.push(Command {
         name: String::from("quit"),
-        description: String::from("Quit SFS"),
+        metadata: CommandMetadata {
+            description: String::from("Quit SFS"),
+            arguments: Vec::new(),
+        },
         flags: Vec::new(),
         aliases: vec![String::from("q"), String::from("exit")],
         callback: quit_command,
@@ -70,7 +84,10 @@ pub fn get_commands() -> Vec<Command> {
     });
     commands.push(Command {
         name: String::from("cd"),
-        description: String::from("Change your current working directory"),
+        metadata: CommandMetadata {
+            description: String::from("Change your current working directory"),
+            arguments: vec![String::from("[DIRECTORY]")],
+        },
         flags: Vec::new(),
         aliases: Vec::new(),
         callback: cd_command,
@@ -78,9 +95,12 @@ pub fn get_commands() -> Vec<Command> {
     });
     commands.push(Command {
         name: String::from("ls"),
-        description: String::from(
-            "List all the files and folder in the specified directory (grid view)",
-        ),
+        metadata: CommandMetadata {
+            description: String::from(
+                "List all the files and folder in the specified directory (grid view)",
+            ),
+            arguments: vec![String::from("(DIRECTORY)...")],
+        },
         flags: vec![
             Flag {
                 name: String::from("all"),
@@ -107,7 +127,10 @@ pub fn get_commands() -> Vec<Command> {
     });
     commands.push(Command {
         name: String::from("encrypt"),
-        description: String::from("Encrypt file(s) with your password"),
+        metadata: CommandMetadata {
+            description: String::from("Encrypt file(s) with your password"),
+            arguments: vec![String::from("[FILE]...")],
+        },
         flags: vec![Flag {
             name: String::from("silent"),
             short_name: String::from("-s"),
@@ -120,7 +143,10 @@ pub fn get_commands() -> Vec<Command> {
     });
     commands.push(Command {
         name: String::from("decrypt"),
-        description: String::from("Decrypt file(s) with your password"),
+        metadata: CommandMetadata {
+            description: String::from("Decrypt file(s) with your password"),
+            arguments: vec![String::from("[FILE]...")],
+        },
         flags: vec![Flag {
             name: String::from("silent"),
             short_name: String::from("-s"),
@@ -154,6 +180,24 @@ pub fn help_command(command: ParsedCommand) {
                     if matched {
                         command_found = true;
 
+                        let mut context_list = Vec::new();
+                        for context in &command.contexts {
+                            context_list.push(context.clone())
+                        }
+                        let mut contexts = String::new();
+                        if command.contexts.len() > 0 {
+                            contexts =
+                                format!("\t$BOLD$Requires:$NORMAL$ {}\n", context_list.join(", "));
+                        }
+
+                        let mut usage = format!("{}", command.name);
+                        if command.flags.len() > 0 {
+                            usage.push_str(" [FLAG]...")
+                        }
+                        for argument in command.metadata.arguments {
+                            usage.push_str(&(String::from(" ") + &argument))
+                        }
+
                         let mut alias_list = Vec::new();
                         for alias in command.aliases {
                             alias_list.push(format!("$BOLD$`{}`$NORMAL$", alias))
@@ -162,6 +206,7 @@ pub fn help_command(command: ParsedCommand) {
                         if alias_list.len() > 0 {
                             aliases = format!(" (AKA {})", alias_list.join("/"));
                         }
+
                         let mut flags = String::from(" None");
                         if command.flags.len() > 0 {
                             flags = String::new();
@@ -177,11 +222,12 @@ pub fn help_command(command: ParsedCommand) {
                             )
                             .as_str()
                         }
+
                         println!(
                             "{}",
                             format_colors(&format!(
-                                "$BOLD$`{}`$NORMAL${}:\n\t{}\n\n\t$BOLD$Flags$NORMAL$:{}",
-                                command.name, aliases, command.description, flags,
+                                "$BOLD$`{}`$NORMAL${}:\n\t{}\n\n{}\t$BOLD$Usage:$NORMAL$ {}\n\t$BOLD$Flags:$NORMAL${}",
+                                command.name, aliases, command.metadata.description, contexts, usage, flags,
                             ))
                         );
                     }
@@ -203,7 +249,7 @@ pub fn help_command(command: ParsedCommand) {
                 "{}",
                 format_colors(&format!(
                     "$BOLD$`{}`$NORMAL$ - $BOLD${}$NORMAL$",
-                    command.name, command.description
+                    command.name, command.metadata.description
                 ))
             )
         }
