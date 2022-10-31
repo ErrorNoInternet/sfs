@@ -6,18 +6,19 @@ use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 
+#[derive(Clone)]
 pub enum Context {
     Configuration(Configuration),
     Fernet(fernet::Fernet),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CommandMetadata {
     pub description: String,
     pub arguments: Vec<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Command {
     pub name: String,
     pub metadata: CommandMetadata,
@@ -27,13 +28,14 @@ pub struct Command {
     pub contexts: Vec<String>,
 }
 
+#[derive(Clone)]
 pub struct ParsedCommand {
     pub name: String,
     pub flags: Vec<ParsedFlag>,
     pub contexts: HashMap<String, Context>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Flag {
     pub name: String,
     pub short_name: String,
@@ -41,7 +43,7 @@ pub struct Flag {
     pub has_value: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ParsedFlag {
     pub name: Option<String>,
     pub value: Option<String>,
