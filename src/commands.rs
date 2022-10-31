@@ -46,8 +46,8 @@ pub struct LsCommandConfiguration {
     pub display_all_files: bool,
     pub list_view: bool,
     pub grid_columns: u16,
-    pub file_color: String,
-    pub folder_color: String,
+    pub file_format: String,
+    pub folder_format: String,
 }
 
 pub fn get_commands() -> Vec<Command> {
@@ -293,14 +293,14 @@ pub fn ls_command(command: ParsedCommand) {
             if path.file_type().unwrap().is_dir() {
                 print!(
                     "{}{: <padding$}",
-                    format_colors(&configuration.ls_command.folder_color),
+                    format_colors(&configuration.ls_command.folder_format),
                     file_name,
                     padding = padding,
                 )
             } else {
                 print!(
                     "{}{: <padding$}",
-                    format_colors(&configuration.ls_command.file_color),
+                    format_colors(&configuration.ls_command.file_format),
                     file_name,
                     padding = padding,
                 )
@@ -310,13 +310,13 @@ pub fn ls_command(command: ParsedCommand) {
             if path.file_type().unwrap().is_dir() {
                 println!(
                     "{}{}",
-                    format_colors(&configuration.ls_command.folder_color),
+                    format_colors(&configuration.ls_command.folder_format),
                     path.file_name().to_str().unwrap()
                 )
             } else {
                 println!(
                     "{}{}",
-                    format_colors(&configuration.ls_command.file_color),
+                    format_colors(&configuration.ls_command.file_format),
                     path.file_name().to_str().unwrap()
                 )
             }

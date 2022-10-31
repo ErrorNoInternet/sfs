@@ -31,8 +31,8 @@ impl Configuration {
                 display_all_files: false,
                 list_view: false,
                 grid_columns: 7,
-                file_color: String::from(""),
-                folder_color: String::from("$BLUE$"),
+                file_format: String::from(""),
+                folder_format: String::from("$BLUE$"),
             },
         }
     }
