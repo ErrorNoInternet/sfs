@@ -99,7 +99,7 @@ pub fn get_commands() -> Vec<Command> {
         name: String::from("ls"),
         metadata: CommandMetadata {
             description: String::from(
-                "List all the files and folder in the specified directory (grid view)",
+                "List all the files and folder in the specified directory (defaults to grid view)",
             ),
             arguments: vec![String::from("(DIRECTORY)...")],
         },
