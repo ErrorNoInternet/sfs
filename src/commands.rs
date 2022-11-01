@@ -128,6 +128,17 @@ pub fn get_commands() -> Vec<Command> {
         contexts: vec![String::from("configuration")],
     });
     commands.push(Command {
+        name: String::from("clear"),
+        metadata: CommandMetadata {
+            description: String::from("Clear the terminal"),
+            arguments: Vec::new(),
+        },
+        flags: Vec::new(),
+        aliases: vec![String::from("cls")],
+        callback: clear_command,
+        contexts: Vec::new(),
+    });
+    commands.push(Command {
         name: String::from("encrypt"),
         metadata: CommandMetadata {
             description: String::from("Encrypt file(s) with your password"),
@@ -399,6 +410,10 @@ pub fn ls_command(command: ParsedCommand) {
             println!();
         }
     }
+}
+
+pub fn clear_command(_command: ParsedCommand) {
+    print!("\u{001b}[2J\u{001b}[H")
 }
 
 pub fn encrypt_command(command: ParsedCommand) {
