@@ -320,11 +320,11 @@ pub fn ls_command(command: ParsedCommand) {
 
     let mut current_column = 0;
     let termsize::Size { cols, rows: _ } = termsize::get().unwrap();
-    let mut padding: usize = (cols / grid_columns).into();
+    let padding: usize = (cols / grid_columns).into();
     if padding <= 3 {
         list_view = true;
     }
-    let print_file = |path: &std::fs::DirEntry, current_column: &mut u16, padding: &mut usize| {
+    let print_file = |path: &std::fs::DirEntry, current_column: &mut u16| {
         if list_view == false {
             if current_column == &grid_columns {
                 *current_column = 0;
@@ -332,15 +332,11 @@ pub fn ls_command(command: ParsedCommand) {
             }
 
             let mut file_name = path.file_name().to_str().unwrap().to_string();
-            if file_name.len() >= *padding {
-                while file_name.len() >= *padding - 3 {
+            if file_name.len() >= padding {
+                while file_name.len() >= padding - 3 {
                     file_name.pop();
                 }
                 file_name += "..."
-            }
-            let old_padding = padding.clone();
-            if current_column == &(grid_columns - 1) {
-                *padding = 0;
             }
             if path.file_type().unwrap().is_dir() {
                 print!(
@@ -356,9 +352,6 @@ pub fn ls_command(command: ParsedCommand) {
                     file_name,
                     padding = padding,
                 )
-            }
-            if current_column == &(grid_columns - 1) {
-                *padding = old_padding;
             }
             *current_column += 1;
         } else {
@@ -386,10 +379,10 @@ pub fn ls_command(command: ParsedCommand) {
                         Ok(path) => {
                             if path.file_name().to_str().unwrap().starts_with(".") {
                                 if display_all_files {
-                                    print_file(&path, &mut current_column, &mut padding)
+                                    print_file(&path, &mut current_column)
                                 }
                             } else {
-                                print_file(&path, &mut current_column, &mut padding)
+                                print_file(&path, &mut current_column)
                             }
                         }
                         Err(error) => {
