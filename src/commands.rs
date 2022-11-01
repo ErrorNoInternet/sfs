@@ -1,4 +1,4 @@
-use crate::utilities::{format_colors, quit_sfs};
+use crate::utilities::{format_colors, quit_sfs, remove_colors};
 use crate::Configuration;
 
 use serde_derive::{Deserialize, Serialize};
@@ -325,49 +325,37 @@ pub fn ls_command(command: ParsedCommand) {
         list_view = true;
     }
     let print_file = |path: &std::fs::DirEntry, current_column: &mut u16| {
+        let mut file_name = path.file_name().to_str().unwrap().to_string();
+        if path.file_type().unwrap().is_dir() {
+            file_name = format_colors(&configuration.ls_command.folder_format) + &file_name;
+        } else {
+            file_name = format_colors(&configuration.ls_command.file_format) + &file_name;
+        }
+        let mut colorless_file_name = remove_colors(&file_name);
+
         if list_view == false {
             if current_column == &grid_columns {
                 *current_column = 0;
                 println!();
             }
 
-            let mut file_name = path.file_name().to_str().unwrap().to_string();
-            if file_name.len() >= padding {
-                while file_name.len() >= padding - 3 {
+            if remove_colors(&file_name).chars().count() >= padding {
+                while remove_colors(&file_name).chars().count() >= padding - 3 {
                     file_name.pop();
+                    colorless_file_name.pop();
                 }
-                file_name += "..."
+                file_name += "...";
+                colorless_file_name += "..."
             }
-            if path.file_type().unwrap().is_dir() {
-                print!(
-                    "{}{: <padding$}",
-                    format_colors(&configuration.ls_command.folder_format),
-                    file_name,
-                    padding = padding,
-                )
-            } else {
-                print!(
-                    "{}{: <padding$}",
-                    format_colors(&configuration.ls_command.file_format),
-                    file_name,
-                    padding = padding,
-                )
-            }
+            print!(
+                "{: <padding$}",
+                file_name,
+                padding =
+                    padding + (file_name.chars().count() - colorless_file_name.chars().count())
+            );
             *current_column += 1;
         } else {
-            if path.file_type().unwrap().is_dir() {
-                println!(
-                    "{}{}",
-                    format_colors(&configuration.ls_command.folder_format),
-                    path.file_name().to_str().unwrap()
-                )
-            } else {
-                println!(
-                    "{}{}",
-                    format_colors(&configuration.ls_command.file_format),
-                    path.file_name().to_str().unwrap()
-                )
-            }
+            println!("{}", file_name)
         }
     };
 

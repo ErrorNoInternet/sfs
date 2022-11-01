@@ -26,6 +26,24 @@ pub fn format_colors(text: &String) -> String {
     text
 }
 
+pub fn remove_colors(text: &String) -> String {
+    let mut text = text.clone();
+
+    text = text.replace("\u{001b}[0m", "");
+    text = text.replace("\u{001b}[1m", "");
+
+    text = text.replace("\u{001b}[30m", "");
+    text = text.replace("\u{001b}[31m", "");
+    text = text.replace("\u{001b}[32m", "");
+    text = text.replace("\u{001b}[33m", "");
+    text = text.replace("\u{001b}[34m", "");
+    text = text.replace("\u{001b}[35m", "");
+    text = text.replace("\u{001b}[36m", "");
+    text = text.replace("\u{001b}[37m", "");
+
+    text
+}
+
 pub fn generate_fernet(password: &String) -> fernet::Fernet {
     let mut result = password.to_owned();
     for _ in 0..128 {
