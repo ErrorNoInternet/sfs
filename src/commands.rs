@@ -350,8 +350,8 @@ pub fn ls_command(command: ParsedCommand) {
                 println!();
             }
 
-            if remove_colors(&file_name).chars().count() >= padding {
-                while remove_colors(&file_name).chars().count() >= padding - 3 {
+            if colorless_file_name.chars().count() >= padding {
+                for _ in 0..colorless_file_name.chars().count() - (padding - 4) {
                     file_name.pop();
                     colorless_file_name.pop();
                 }
