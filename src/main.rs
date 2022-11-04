@@ -1,7 +1,10 @@
 mod commands;
 mod utilities;
 
-use commands::{get_commands, Context, LsCommandConfiguration, ParsedCommand, ParsedFlag};
+use commands::{
+    get_commands, Context, DecryptCommandConfiguration, EncryptCommandConfiguration,
+    LsCommandConfiguration, ParsedCommand, ParsedFlag,
+};
 use utilities::{debug_print, format_colors, generate_fernet, quit_sfs, tokenize};
 
 use rustyline::highlight::{Highlighter, MatchingBracketHighlighter};
@@ -20,6 +23,8 @@ pub struct Configuration {
     prompt: String,
     debug_mode: bool,
     ls_command: LsCommandConfiguration,
+    encrypt_command: EncryptCommandConfiguration,
+    decrypt_command: DecryptCommandConfiguration,
 }
 
 impl Configuration {
@@ -34,6 +39,8 @@ impl Configuration {
                 file_format: String::from(""),
                 folder_format: String::from("$BLUE$"),
             },
+            encrypt_command: EncryptCommandConfiguration { silent: false },
+            decrypt_command: DecryptCommandConfiguration { silent: false },
         }
     }
 }

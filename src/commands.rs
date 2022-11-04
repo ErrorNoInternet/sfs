@@ -58,6 +58,16 @@ pub struct LsCommandConfiguration {
     pub folder_format: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EncryptCommandConfiguration {
+    pub silent: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DecryptCommandConfiguration {
+    pub silent: bool,
+}
+
 pub fn get_commands() -> Vec<Command> {
     let mut commands = Vec::new();
     commands.push(Command {
@@ -152,7 +162,7 @@ pub fn get_commands() -> Vec<Command> {
         }],
         aliases: Vec::new(),
         callback: encrypt_command,
-        contexts: vec![String::from("fernet")],
+        contexts: vec![String::from("fernet"), String::from("configuration")],
     });
     commands.push(Command {
         name: String::from("decrypt"),
@@ -168,7 +178,7 @@ pub fn get_commands() -> Vec<Command> {
         }],
         aliases: Vec::new(),
         callback: decrypt_command,
-        contexts: vec![String::from("fernet")],
+        contexts: vec![String::from("fernet"), String::from("configuration")],
     });
     commands
 }
@@ -417,7 +427,7 @@ pub fn clear_command(_command: ParsedCommand) {
 }
 
 pub fn encrypt_command(command: ParsedCommand) {
-    let _fernet = match command.contexts.get(&String::from("fernet")) {
+    let fernet = match command.contexts.get(&String::from("fernet")) {
         Some(fernet) => match fernet {
             Context::Fernet(fernet) => fernet,
             _ => unreachable!(),
@@ -430,10 +440,37 @@ pub fn encrypt_command(command: ParsedCommand) {
             return;
         }
     };
+    let configuration = match command.contexts.get(&String::from("configuration")) {
+        Some(configuration) => match configuration {
+            Context::Configuration(configuration) => configuration,
+            _ => unreachable!(),
+        },
+        None => {
+            println!(
+                "{} Configuration was not passed by SFS!",
+                format_colors(&String::from("$BOLD$Fatal error:$NORMAL$")),
+            );
+            return;
+        }
+    };
+
+    let mut silent = configuration.encrypt_command.silent;
+    let mut input_paths = Vec::new();
+
+    for flag in command.flags {
+        if flag.name.is_some() {
+            match flag.name.unwrap().as_str() {
+                "silent" => silent = true,
+                _ => (),
+            }
+        } else if flag.value.is_some() {
+            input_paths.push(flag.value.unwrap())
+        }
+    }
 }
 
 pub fn decrypt_command(command: ParsedCommand) {
-    let _fernet = match command.contexts.get(&String::from("fernet")) {
+    let fernet = match command.contexts.get(&String::from("fernet")) {
         Some(fernet) => match fernet {
             Context::Fernet(fernet) => fernet,
             _ => unreachable!(),
@@ -446,4 +483,31 @@ pub fn decrypt_command(command: ParsedCommand) {
             return;
         }
     };
+    let configuration = match command.contexts.get(&String::from("configuration")) {
+        Some(configuration) => match configuration {
+            Context::Configuration(configuration) => configuration,
+            _ => unreachable!(),
+        },
+        None => {
+            println!(
+                "{} Configuration was not passed by SFS!",
+                format_colors(&String::from("$BOLD$Fatal error:$NORMAL$")),
+            );
+            return;
+        }
+    };
+
+    let mut silent = configuration.encrypt_command.silent;
+    let mut input_paths = Vec::new();
+
+    for flag in command.flags {
+        if flag.name.is_some() {
+            match flag.name.unwrap().as_str() {
+                "silent" => silent = true,
+                _ => (),
+            }
+        } else if flag.value.is_some() {
+            input_paths.push(flag.value.unwrap())
+        }
+    }
 }
