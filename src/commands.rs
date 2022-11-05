@@ -319,7 +319,6 @@ pub fn ls_command(command: ParsedCommand) {
     let mut list_view = configuration.ls_command.list_view;
     let mut grid_columns = configuration.ls_command.grid_columns;
     let mut input_paths = Vec::new();
-
     for flag in command.flags {
         if flag.name.is_some() {
             match flag.name.unwrap().as_str() {
@@ -456,7 +455,6 @@ pub fn encrypt_command(command: ParsedCommand) {
 
     let mut silent = configuration.encrypt_command.silent;
     let mut input_paths = Vec::new();
-
     for flag in command.flags {
         if flag.name.is_some() {
             match flag.name.unwrap().as_str() {
@@ -499,7 +497,6 @@ pub fn decrypt_command(command: ParsedCommand) {
 
     let mut silent = configuration.encrypt_command.silent;
     let mut input_paths = Vec::new();
-
     for flag in command.flags {
         if flag.name.is_some() {
             match flag.name.unwrap().as_str() {
