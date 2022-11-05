@@ -15,6 +15,7 @@ use rustyline_derive::{Completer, Helper, Hinter, Validator};
 use serde_derive::{Deserialize, Serialize};
 use std::borrow::Cow::{self, Owned};
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{fs, io::Write};
 
@@ -69,18 +70,22 @@ impl Highlighter for AutocompleteHelper {
 }
 
 fn main() {
-    let mut configuration_path = String::from("./");
+    let mut configuration_path = match home::home_dir() {
+        Some(path) => path,
+        None => PathBuf::from("."),
+    };
     if cfg!(unix) {
-        configuration_path = format!("/home/{}/.config/sfs/", whoami::username());
+        configuration_path.push(".config/sfs")
     } else if cfg!(windows) {
-        configuration_path = format!("C:/Users/{}/AppData/Roaming/sfs/", whoami::username())
+        configuration_path.push("AppData/Roaming/sfs")
     }
     fs::create_dir_all(&configuration_path).expect("Unable to create configuration directory");
-    let configuration_string =
-        match fs::read_to_string(configuration_path.to_owned() + "configuration.toml") {
-            Ok(configuration) => configuration.trim().to_string(),
-            Err(_) => String::new(),
-        };
+    let mut configuration_file = configuration_path.clone();
+    configuration_file.push("configuration.toml");
+    let configuration_string = match fs::read_to_string(&configuration_file) {
+        Ok(configuration) => configuration.trim().to_string(),
+        Err(_) => String::new(),
+    };
     let configuration: Configuration = match toml::from_str(&configuration_string.as_str()) {
         Ok(configuration) => configuration,
         Err(_) => {
@@ -114,10 +119,7 @@ fn main() {
             }
 
             let configuration = Configuration::default();
-            match fs::write(
-                configuration_path.to_owned() + "configuration.toml",
-                toml::to_string(&configuration).unwrap(),
-            ) {
+            match fs::write(configuration_file, toml::to_string(&configuration).unwrap()) {
                 Ok(_) => (),
                 Err(error) => println!(
                     "{} {:?}",
