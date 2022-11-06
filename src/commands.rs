@@ -103,7 +103,7 @@ pub fn get_commands() -> Vec<Command> {
         },
         flags: Vec::new(),
         aliases: Vec::new(),
-        callback: cd_command,
+        callback: change_directory_command,
         contexts: Vec::new(),
     });
     commands.push(Command {
@@ -135,8 +135,19 @@ pub fn get_commands() -> Vec<Command> {
             },
         ],
         aliases: Vec::new(),
-        callback: ls_command,
+        callback: list_command,
         contexts: vec![String::from("configuration")],
+    });
+    commands.push(Command {
+        name: String::from("rm"),
+        metadata: CommandMetadata {
+            description: String::from("Remove a file"),
+            arguments: vec![String::from("[FILE]...")],
+        },
+        flags: Vec::new(),
+        aliases: vec![String::from("del"), String::from("delete")],
+        callback: remove_command,
+        contexts: Vec::new(),
     });
     commands.push(Command {
         name: String::from("clear"),
@@ -195,7 +206,7 @@ pub fn get_commands() -> Vec<Command> {
 pub fn help_command(command: ParsedCommand) {
     if command.flags.len() > 0 {
         for flag in command.flags {
-            if flag.value.is_some() {
+            if flag.name.is_none() && flag.value.is_some() {
                 let input_command = flag.value.unwrap();
                 let mut command_found = false;
                 for command in get_commands() {
@@ -292,7 +303,7 @@ pub fn quit_command(_: ParsedCommand) {
     quit_sfs();
 }
 
-pub fn cd_command(command: ParsedCommand) {
+pub fn change_directory_command(command: ParsedCommand) {
     for flag in command.flags {
         if flag.name.is_none() && flag.value.is_some() {
             match std::env::set_current_dir(flag.value.unwrap()) {
@@ -309,7 +320,7 @@ pub fn cd_command(command: ParsedCommand) {
     }
 }
 
-pub fn ls_command(command: ParsedCommand) {
+pub fn list_command(command: ParsedCommand) {
     let configuration = match command.contexts.get(&String::from("configuration")) {
         Some(configuration) => match configuration {
             Context::Configuration(configuration) => configuration,
@@ -324,9 +335,9 @@ pub fn ls_command(command: ParsedCommand) {
         }
     };
 
-    let mut display_all_files = configuration.ls_command.display_all_files;
-    let mut list_view = configuration.ls_command.list_view;
-    let mut grid_columns = configuration.ls_command.grid_columns;
+    let mut display_all_files = configuration.list_command.display_all_files;
+    let mut list_view = configuration.list_command.list_view;
+    let mut grid_columns = configuration.list_command.grid_columns;
     let mut input_paths = Vec::new();
     for flag in command.flags {
         if flag.name.is_some() {
@@ -356,9 +367,9 @@ pub fn ls_command(command: ParsedCommand) {
     let print_file = |path: &std::fs::DirEntry, current_column: &mut u16| {
         let mut file_name = path.file_name().to_str().unwrap().to_string();
         if path.file_type().unwrap().is_dir() {
-            file_name = format_colors(&configuration.ls_command.folder_format) + &file_name;
+            file_name = format_colors(&configuration.list_command.folder_format) + &file_name;
         } else {
-            file_name = format_colors(&configuration.ls_command.file_format) + &file_name;
+            file_name = format_colors(&configuration.list_command.file_format) + &file_name;
         }
         let mut colorless_file_name = remove_colors(&file_name);
 
@@ -426,6 +437,29 @@ pub fn ls_command(command: ParsedCommand) {
         }
         if index != input_paths.len() - 1 {
             println!();
+        }
+    }
+}
+
+pub fn remove_command(command: ParsedCommand) {
+    let mut input_paths = Vec::new();
+    for flag in command.flags {
+        if flag.name.is_none() && flag.value.is_some() {
+            input_paths.push(flag.value.unwrap())
+        }
+    }
+
+    for input_path in input_paths {
+        match fs::remove_file(input_path) {
+            Ok(_) => (),
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to remove file:$NORMAL$")),
+                    error
+                );
+                continue;
+            }
         }
     }
 }

@@ -25,7 +25,7 @@ use std::{fs, io::Write};
 pub struct Configuration {
     prompt: String,
     debug_mode: bool,
-    ls_command: LsCommandConfiguration,
+    list_command: LsCommandConfiguration,
     encrypt_command: EncryptCommandConfiguration,
     decrypt_command: DecryptCommandConfiguration,
 }
@@ -35,7 +35,7 @@ impl Configuration {
         Configuration {
             prompt: String::from("$BOLD$$BLUE$$PATH$ >$NORMAL$ "),
             debug_mode: false,
-            ls_command: LsCommandConfiguration {
+            list_command: LsCommandConfiguration {
                 display_all_files: false,
                 list_view: false,
                 grid_columns: 7,
