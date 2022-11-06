@@ -61,6 +61,7 @@ pub struct LsCommandConfiguration {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptCommandConfiguration {
     pub silent: bool,
+    pub hash_chunks: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -154,12 +155,20 @@ pub fn get_commands() -> Vec<Command> {
             description: String::from("Encrypt file(s) with your password"),
             arguments: vec![String::from("[FILE]...")],
         },
-        flags: vec![Flag {
-            name: String::from("silent"),
-            short_name: String::from("-s"),
-            description: String::from("Do not display a progress bar"),
-            has_value: false,
-        }],
+        flags: vec![
+            Flag {
+                name: String::from("silent"),
+                short_name: String::from("s"),
+                description: String::from("Do not display a progress bar"),
+                has_value: false,
+            },
+            Flag {
+                name: String::from("hash-chunks"),
+                short_name: String::from("h"),
+                description: String::from("Keep a checksum of all the chunks"),
+                has_value: false,
+            },
+        ],
         aliases: Vec::new(),
         callback: encrypt_command,
         contexts: vec![String::from("fernet"), String::from("configuration")],
@@ -172,7 +181,7 @@ pub fn get_commands() -> Vec<Command> {
         },
         flags: vec![Flag {
             name: String::from("silent"),
-            short_name: String::from("-s"),
+            short_name: String::from("s"),
             description: String::from("Do not display a progress bar"),
             has_value: false,
         }],
