@@ -1,10 +1,10 @@
 use crate::utilities::{format_colors, quit_sfs, remove_colors};
 use crate::Configuration;
-
 use serde_derive::{Deserialize, Serialize};
-
+use sfs::Encrypter;
 use std::collections::HashMap;
 use std::fs;
+use std::io::{BufReader, Read, Seek, Write};
 
 #[derive(Clone)]
 pub enum Context {
