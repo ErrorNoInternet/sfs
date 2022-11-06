@@ -42,7 +42,10 @@ impl Configuration {
                 file_format: String::from(""),
                 folder_format: String::from("$BLUE$"),
             },
-            encrypt_command: EncryptCommandConfiguration { silent: false },
+            encrypt_command: EncryptCommandConfiguration {
+                silent: false,
+                hash_chunks: false,
+            },
             decrypt_command: DecryptCommandConfiguration { silent: false },
         }
     }
