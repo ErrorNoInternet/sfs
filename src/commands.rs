@@ -147,6 +147,28 @@ pub fn get_commands() -> Vec<Command> {
         contexts: &[],
     });
     commands.push(Command {
+        name: "cp",
+        metadata: CommandMetadata {
+            description: "Copy a file to a different location",
+            arguments: &["[FILE]", "[DESTINATION]"],
+        },
+        flags: &[],
+        aliases: &["copy"],
+        callback: copy_command,
+        contexts: &[],
+    });
+    commands.push(Command {
+        name: "mv",
+        metadata: CommandMetadata {
+            description: "Move a file to a different location",
+            arguments: &["[FILE]", "[DESTINATION]"],
+        },
+        flags: &[],
+        aliases: &["move"],
+        callback: move_command,
+        contexts: &[],
+    });
+    commands.push(Command {
         name: "clear",
         metadata: CommandMetadata {
             description: "Clear the terminal",
@@ -457,6 +479,60 @@ pub fn remove_command(command: ParsedCommand) {
                 );
                 continue;
             }
+        }
+    }
+}
+
+pub fn copy_command(command: ParsedCommand) {
+    let mut input_paths = Vec::new();
+    for flag in command.flags {
+        if flag.name.is_none() && flag.value.is_some() {
+            input_paths.push(flag.value.unwrap())
+        }
+    }
+    if input_paths.len() <= 1 {
+        println!("Not enough arguments!");
+        return;
+    }
+
+    match fs::copy(
+        input_paths.iter().nth(0).unwrap(),
+        input_paths.iter().last().unwrap(),
+    ) {
+        Ok(_) => (),
+        Err(error) => {
+            println!(
+                "{} {:?}",
+                format_colors(&String::from("$BOLD$Unable to copy file:$NORMAL$")),
+                error
+            );
+        }
+    }
+}
+
+pub fn move_command(command: ParsedCommand) {
+    let mut input_paths = Vec::new();
+    for flag in command.flags {
+        if flag.name.is_none() && flag.value.is_some() {
+            input_paths.push(flag.value.unwrap())
+        }
+    }
+    if input_paths.len() <= 1 {
+        println!("Not enough arguments!");
+        return;
+    }
+
+    match fs::rename(
+        input_paths.iter().nth(0).unwrap(),
+        input_paths.iter().last().unwrap(),
+    ) {
+        Ok(_) => (),
+        Err(error) => {
+            println!(
+                "{} {:?}",
+                format_colors(&String::from("$BOLD$Unable to move file:$NORMAL$")),
+                error
+            );
         }
     }
 }
