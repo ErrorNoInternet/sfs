@@ -243,7 +243,7 @@ fn main() {
             debug_print(&format!("tokens: {:?}", tokens));
         }
         let first_token = match tokens.iter().nth(0) {
-            Some(token) => token,
+            Some(token) => token.to_string(),
             None => continue,
         };
         if first_token.starts_with("!") {
@@ -274,11 +274,11 @@ fn main() {
         let mut command_found = false;
         for command in &commands {
             let mut matched = false;
-            if &command.name == first_token {
+            if command.name.to_string() == first_token {
                 matched = true;
             } else {
-                for alias in &command.aliases {
-                    if alias == first_token {
+                for alias in command.aliases {
+                    if alias.to_string() == first_token {
                         matched = true;
                     }
                 }
@@ -294,12 +294,12 @@ fn main() {
                 let mut looking_for_value = false;
                 'token_loop: for token in tokens.iter().skip(1) {
                     if !looking_for_value {
-                        for flag in &command.flags {
-                            if &(String::from("--") + &flag.name) == token
+                        for flag in command.flags {
+                            if &(String::from("--") + flag.name) == token
                                 || &(String::from("-") + &flag.short_name) == token
                             {
                                 matched_flag = Some(ParsedFlag {
-                                    name: Some(flag.name.clone()),
+                                    name: Some(flag.name.to_string()),
                                     value: None,
                                 });
                                 if flag.has_value {
@@ -314,14 +314,14 @@ fn main() {
                         Some(mut flag) => {
                             if looking_for_value {
                                 looking_for_value = false;
-                                flag.value = Some(token.to_string());
+                                flag.value = Some(token.clone());
                             }
                             parsed_flags.push(flag);
                             matched_flag = None;
                         }
                         None => parsed_flags.push(ParsedFlag {
                             name: None,
-                            value: Some(token.to_string()),
+                            value: Some(token.clone()),
                         }),
                     };
                 }
@@ -330,13 +330,13 @@ fn main() {
                 }
 
                 let mut contexts: HashMap<String, Context> = HashMap::new();
-                for required_context in &command.contexts {
-                    match required_context.as_str() {
-                        "configuration" => contexts.insert(
+                for required_context in command.contexts {
+                    match required_context {
+                        &"configuration" => contexts.insert(
                             String::from("configuration"),
                             Context::Configuration(configuration.clone()),
                         ),
-                        "fernet" => {
+                        &"fernet" => {
                             contexts.insert(String::from("fernet"), Context::Fernet(fernet.clone()))
                         }
                         _ => None,
@@ -348,7 +348,7 @@ fn main() {
                     .unwrap()
                     .as_millis();
                 (command.callback)(ParsedCommand {
-                    name: first_token.to_string(),
+                    name: first_token.clone(),
                     flags: parsed_flags,
                     contexts,
                 });

@@ -14,18 +14,18 @@ pub enum Context {
 
 #[derive(Debug, Clone)]
 pub struct CommandMetadata {
-    pub description: String,
-    pub arguments: Vec<String>,
+    pub description: &'static str,
+    pub arguments: &'static [&'static str],
 }
 
 #[derive(Debug, Clone)]
 pub struct Command {
-    pub name: String,
+    pub name: &'static str,
     pub metadata: CommandMetadata,
-    pub flags: Vec<Flag>,
-    pub aliases: Vec<String>,
+    pub flags: &'static [Flag],
+    pub aliases: &'static [&'static str],
     pub callback: fn(ParsedCommand),
-    pub contexts: Vec<String>,
+    pub contexts: &'static [&'static str],
 }
 
 #[derive(Clone)]
@@ -37,9 +37,9 @@ pub struct ParsedCommand {
 
 #[derive(Debug, Clone)]
 pub struct Flag {
-    pub name: String,
-    pub short_name: String,
-    pub description: String,
+    pub name: &'static str,
+    pub short_name: &'static str,
+    pub description: &'static str,
     pub has_value: bool,
 }
 
@@ -72,133 +72,130 @@ pub struct DecryptCommandConfiguration {
 pub fn get_commands() -> Vec<Command> {
     let mut commands = Vec::new();
     commands.push(Command {
-        name: String::from("help"),
+        name: "help",
         metadata: CommandMetadata {
-            description: String::from(
-                "Get help for a command, or list all commands if none specified",
-            ),
-            arguments: vec![String::from("(COMMAND)...")],
+            description: "Get help for a command, or list all commands if none specified",
+            arguments: &["(COMMAND)..."],
         },
-        flags: Vec::new(),
-        aliases: vec![String::from("h"), String::from("?")],
+        flags: &[],
+        aliases: &["h", "?"],
         callback: help_command,
-        contexts: Vec::new(),
+        contexts: &[],
     });
     commands.push(Command {
-        name: String::from("quit"),
+        name: "quit",
         metadata: CommandMetadata {
-            description: String::from("Quit SFS"),
-            arguments: Vec::new(),
+            description: "Quit SFS",
+            arguments: &[],
         },
-        flags: Vec::new(),
-        aliases: vec![String::from("q"), String::from("exit")],
+        flags: &[],
+        aliases: &["q", "exit"],
         callback: quit_command,
-        contexts: Vec::new(),
+        contexts: &[],
     });
     commands.push(Command {
-        name: String::from("cd"),
+        name: "cd",
         metadata: CommandMetadata {
-            description: String::from("Change your current working directory"),
-            arguments: vec![String::from("[DIRECTORY]")],
+            description: "Change your current working directory",
+            arguments: &["[DIRECTORY]"],
         },
-        flags: Vec::new(),
-        aliases: Vec::new(),
+        flags: &[],
+        aliases: &[],
         callback: change_directory_command,
-        contexts: Vec::new(),
+        contexts: &[],
     });
     commands.push(Command {
-        name: String::from("ls"),
+        name: "ls",
         metadata: CommandMetadata {
-            description: String::from(
+            description:
                 "List all the files and folder in the specified directory (defaults to grid view)",
-            ),
-            arguments: vec![String::from("(DIRECTORY)...")],
+            arguments: &["(DIRECTORY)..."],
         },
-        flags: vec![
+        flags: &[
             Flag {
-                name: String::from("all"),
-                short_name: String::from("a"),
-                description: String::from("List hidden files as well"),
+                name: "all",
+                short_name: "a",
+                description: "List hidden files as well",
                 has_value: false,
             },
             Flag {
-                name: String::from("list"),
-                short_name: String::from("l"),
-                description: String::from("List one file for each line (list view)"),
+                name: "list",
+                short_name: "l",
+                description: "List one file for each line (list view)",
                 has_value: false,
             },
             Flag {
-                name: String::from("columns"),
-                short_name: String::from("c"),
-                description: String::from("The amount of columns to print (for grid view)"),
+                name: "columns",
+                short_name: "c",
+                description: "The amount of columns to print (for grid view)",
                 has_value: true,
             },
         ],
-        aliases: Vec::new(),
+        aliases: &[],
         callback: list_command,
-        contexts: vec![String::from("configuration")],
+        contexts: &["configuration"],
     });
     commands.push(Command {
-        name: String::from("rm"),
+        name: "rm",
         metadata: CommandMetadata {
-            description: String::from("Remove a file"),
-            arguments: vec![String::from("[FILE]...")],
+            description: "Remove a file",
+            arguments: &["[FILE]..."],
         },
-        flags: Vec::new(),
-        aliases: vec![String::from("del"), String::from("delete")],
+        flags: &[],
+        aliases: &["del", "delete"],
         callback: remove_command,
-        contexts: Vec::new(),
+        contexts: &[],
     });
     commands.push(Command {
-        name: String::from("clear"),
+        name: "clear",
         metadata: CommandMetadata {
-            description: String::from("Clear the terminal"),
-            arguments: Vec::new(),
+            description: "Clear the terminal",
+            arguments: &[],
         },
-        flags: Vec::new(),
-        aliases: vec![String::from("cls")],
+        flags: &[],
+        aliases: &["cls"],
         callback: clear_command,
-        contexts: Vec::new(),
+        contexts: &[],
     });
     commands.push(Command {
-        name: String::from("encrypt"),
+        name: "encrypt",
         metadata: CommandMetadata {
-            description: String::from("Encrypt file(s) with your password"),
-            arguments: vec![String::from("[FILE]...")],
+            description: "Encrypt file(s) with your password",
+            arguments: &["[FILE]..."],
         },
-        flags: vec![
+        flags: &[
             Flag {
-                name: String::from("silent"),
-                short_name: String::from("s"),
-                description: String::from("Do not display a progress bar"),
+                name: "silent",
+                short_name: "s",
+                description: "Do not display a progress bar",
                 has_value: false,
             },
             Flag {
-                name: String::from("hash-chunks"),
-                short_name: String::from("h"),
-                description: String::from("Keep a checksum of all the chunks"),
+                name: "hash-chunks",
+                short_name: "h",
+                description: "Keep a checksum of all the chunks",
                 has_value: false,
             },
         ],
-        aliases: Vec::new(),
+        aliases: &[],
         callback: encrypt_command,
-        contexts: vec![String::from("fernet"), String::from("configuration")],
+        contexts: &["fernet", "configuration"],
     });
     commands.push(Command {
-        name: String::from("decrypt"),
+        name: "decrypt",
         metadata: CommandMetadata {
-            description: String::from("Decrypt file(s) with your password"),
-            arguments: vec![String::from("[FILE]...")],
+            description: "Decrypt file(s) with your password",
+            arguments: &["[FILE]..."],
         },
-        flags: vec![Flag {
-            name: String::from("silent"),
-            short_name: String::from("s"),
-            description: String::from("Do not display a progress bar"),
+        flags: &[Flag {
+            name: "silent",
+            short_name: "s",
+            description: "Do not display a progress bar",
             has_value: false,
         }],
-        aliases: Vec::new(),
+        aliases: &[],
         callback: decrypt_command,
-        contexts: vec![String::from("fernet"), String::from("configuration")],
+        contexts: &["fernet", "configuration"],
     });
     commands
 }
@@ -214,7 +211,7 @@ pub fn help_command(command: ParsedCommand) {
                     if command.name == input_command {
                         matched = true;
                     } else {
-                        for alias in &command.aliases {
+                        for alias in command.aliases {
                             if alias == &input_command {
                                 matched = true;
                             }
@@ -224,7 +221,7 @@ pub fn help_command(command: ParsedCommand) {
                         command_found = true;
 
                         let mut context_list = Vec::new();
-                        for context in &command.contexts {
+                        for context in command.contexts {
                             context_list.push(context.clone())
                         }
                         let mut contexts = String::new();
@@ -277,12 +274,12 @@ pub fn help_command(command: ParsedCommand) {
                 }
                 if !command_found {
                     println!(
-                    "{}",
-                    format_colors(&format!(
-                        "Unknown command $BOLD$`{}`$NORMAL$. Type $BOLD$`help`$NORMAL$ for a list of commands.",
-                        input_command.as_str()
-                    ))
-                )
+                        "{}",
+                        format_colors(&format!(
+                            "Unknown command $BOLD$`{}`$NORMAL$. Type $BOLD$`help`$NORMAL$ for a list of commands.",
+                            input_command
+                        ))
+                    )
                 }
             }
         }
@@ -523,7 +520,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 continue;
             }
         };
-        let output_path = input_path + ".sfs";
+        let output_path = input_path.to_string() + ".sfs";
         if fs::metadata(&output_path).is_ok() {
             let mut input = String::new();
             loop {
