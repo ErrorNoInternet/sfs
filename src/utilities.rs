@@ -46,7 +46,7 @@ pub fn remove_colors(text: &String) -> String {
 
 pub fn generate_fernet(password: &String) -> fernet::Fernet {
     let mut result = password.to_owned();
-    for _ in 0..128 {
+    for _ in 0..256 {
         let mut hasher = Sha256::new();
         hasher.update(result.clone().into_bytes());
         result = format!("{:X}", hasher.finalize());
