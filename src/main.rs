@@ -1,6 +1,8 @@
 mod commands;
 mod utilities;
 
+#[macro_use]
+extern crate structure;
 use commands::{
     get_commands, Context, DecryptCommandConfiguration, EncryptCommandConfiguration,
     LsCommandConfiguration, ParsedCommand, ParsedFlag,
