@@ -463,57 +463,150 @@ pub fn encrypt_command(command: ParsedCommand) {
     };
 
     let mut silent = configuration.encrypt_command.silent;
+    let mut hash_chunks = configuration.encrypt_command.hash_chunks;
     let mut input_paths = Vec::new();
     for flag in command.flags {
         if flag.name.is_some() {
             match flag.name.unwrap().as_str() {
                 "silent" => silent = true,
+                "hash-chunks" => hash_chunks = true,
                 _ => (),
             }
         } else if flag.value.is_some() {
             input_paths.push(flag.value.unwrap())
         }
     }
-}
 
-pub fn decrypt_command(command: ParsedCommand) {
-    let fernet = match command.contexts.get(&String::from("fernet")) {
-        Some(fernet) => match fernet {
-            Context::Fernet(fernet) => fernet,
-            _ => unreachable!(),
-        },
-        None => {
-            println!(
-                "{} Fernet was not passed by SFS!",
-                format_colors(&String::from("$BOLD$Fatal error:$NORMAL$")),
-            );
-            return;
-        }
-    };
-    let configuration = match command.contexts.get(&String::from("configuration")) {
-        Some(configuration) => match configuration {
-            Context::Configuration(configuration) => configuration,
-            _ => unreachable!(),
-        },
-        None => {
-            println!(
-                "{} Configuration was not passed by SFS!",
-                format_colors(&String::from("$BOLD$Fatal error:$NORMAL$")),
-            );
-            return;
-        }
-    };
-
-    let mut silent = configuration.encrypt_command.silent;
-    let mut input_paths = Vec::new();
-    for flag in command.flags {
-        if flag.name.is_some() {
-            match flag.name.unwrap().as_str() {
-                "silent" => silent = true,
-                _ => (),
+    'input_loop: for input_path in input_paths {
+        let mut buffered_reader = match fs::File::open(&input_path) {
+            Ok(file) => BufReader::new(file),
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to read file:$NORMAL$")),
+                    error
+                );
+                continue;
             }
-        } else if flag.value.is_some() {
-            input_paths.push(flag.value.unwrap())
+        };
+        let output_path = input_path + ".sfs";
+        if fs::metadata(&output_path).is_ok() {
+            let mut input = String::new();
+            loop {
+                if input.to_lowercase().starts_with("n") {
+                    return;
+                } else if input.to_lowercase().starts_with("y") {
+                    break;
+                } else {
+                    print!(
+                        "{}",
+                        format_colors(&format!("$BOLD${}$NORMAL$ already exists. Do you want to overwrite it? $BOLD$Y/N:$NORMAL$ ", output_path))
+                    );
+                    std::io::stdout().flush().unwrap();
+                    input.clear();
+                    match std::io::stdin().read_line(&mut input) {
+                        Ok(_) => (),
+                        Err(error) => {
+                            println!(
+                                "{} {:?}",
+                                format_colors(&String::from("$BOLD$Unable to read input:$NORMAL$")),
+                                error
+                            );
+                            std::process::exit(1)
+                        }
+                    }
+                }
+            }
+        }
+        let mut output_file = match fs::File::create(output_path) {
+            Ok(file) => file,
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to create file:$NORMAL$")),
+                    error
+                );
+                continue;
+            }
+        };
+        let mut buffer = vec![0; 1048576];
+        let mut encrypter = Encrypter::new();
+        let encrypt_function = match hash_chunks {
+            true => Encrypter::encrypt_with_hash,
+            false => Encrypter::encrypt,
+        };
+
+        match output_file.write(&[0; 17]) {
+            Ok(_) => (),
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to write file:$NORMAL$")),
+                    error
+                );
+                continue 'input_loop;
+            }
+        }
+        loop {
+            let read = match buffered_reader.read(&mut buffer) {
+                Ok(read) => read,
+                Err(error) => {
+                    println!(
+                        "{} {:?}",
+                        format_colors(&String::from("$BOLD$Unable to read file:$NORMAL$")),
+                        error
+                    );
+                    continue 'input_loop;
+                }
+            };
+            if read == 0 {
+                break;
+            }
+
+            let mut encrypted = "\n".as_bytes().to_vec();
+            encrypted.append(
+                &mut encrypt_function(&mut encrypter, &fernet, &buffer[..read]).into_bytes(),
+            );
+            match output_file.write(&encrypted) {
+                Ok(_) => (),
+                Err(error) => {
+                    println!(
+                        "{} {:?}",
+                        format_colors(&String::from("$BOLD$Unable to write file:$NORMAL$")),
+                        error
+                    );
+                    continue 'input_loop;
+                }
+            }
+        }
+        let (has_checksum, checksum) = encrypter.get_checksum();
+        match output_file.seek(std::io::SeekFrom::Start(0)) {
+            Ok(_) => (),
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to write file:$NORMAL$")),
+                    error
+                );
+                continue 'input_loop;
+            }
+        };
+        match output_file.write(
+            &structure!("Q?Q")
+                .pack(encrypter.total_bytes, has_checksum, checksum)
+                .unwrap(),
+        ) {
+            Ok(_) => (),
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to write file:$NORMAL$")),
+                    error
+                );
+                continue 'input_loop;
+            }
         }
     }
 }
+
+pub fn decrypt_command(_command: ParsedCommand) {}
