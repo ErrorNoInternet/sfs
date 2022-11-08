@@ -1,5 +1,7 @@
 use xxhash_rust::xxh3::Xxh3;
 
+pub const SFS_VERSION: u8 = 1;
+
 pub struct Encrypter {
     pub hasher: Xxh3,
     pub total_bytes: u64,

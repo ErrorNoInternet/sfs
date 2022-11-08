@@ -643,7 +643,7 @@ pub fn encrypt_command(command: ParsedCommand) {
             false => Encrypter::encrypt,
         };
 
-        match output_file.write(&[0; 17]) {
+        match output_file.write(&[0; 18]) {
             Ok(_) => (),
             Err(error) => {
                 println!(
@@ -699,8 +699,13 @@ pub fn encrypt_command(command: ParsedCommand) {
             }
         };
         match output_file.write(
-            &structure!("Q?Q")
-                .pack(encrypter.total_bytes, has_checksum, checksum)
+            &structure!("B?QQ")
+                .pack(
+                    sfs::SFS_VERSION,
+                    has_checksum,
+                    checksum,
+                    encrypter.total_bytes,
+                )
                 .unwrap(),
         ) {
             Ok(_) => (),
