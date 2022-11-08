@@ -72,6 +72,17 @@ pub struct DecryptCommandConfiguration {
 pub fn get_commands() -> Vec<Command> {
     let mut commands = Vec::new();
     commands.push(Command {
+        name: "version",
+        metadata: CommandMetadata {
+            description: "Get the current SFS version",
+            arguments: &[],
+        },
+        flags: &[],
+        aliases: &["ver", "about"],
+        callback: version_command,
+        contexts: &[],
+    });
+    commands.push(Command {
         name: "help",
         metadata: CommandMetadata {
             description: "Get help for a command, or list all commands if none specified",
@@ -220,6 +231,10 @@ pub fn get_commands() -> Vec<Command> {
         contexts: &["fernet", "configuration"],
     });
     commands
+}
+
+pub fn version_command(_command: ParsedCommand) {
+    println!("SFS v{} ({})", sfs::SFS_VERSION_STRING, sfs::SFS_VERSION)
 }
 
 pub fn help_command(command: ParsedCommand) {

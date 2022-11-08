@@ -1,6 +1,7 @@
 use xxhash_rust::xxh3::Xxh3;
 
 pub const SFS_VERSION: u8 = 1;
+pub const SFS_VERSION_STRING: &str = "1.0";
 
 pub struct Encrypter {
     pub hasher: Xxh3,
