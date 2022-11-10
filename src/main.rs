@@ -46,7 +46,10 @@ impl Configuration {
                 silent: false,
                 hash_chunks: false,
             },
-            decrypt_command: DecryptCommandConfiguration { silent: false },
+            decrypt_command: DecryptCommandConfiguration {
+                silent: false,
+                verify_checksum: false,
+            },
         }
     }
 }

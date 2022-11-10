@@ -67,6 +67,7 @@ pub struct EncryptCommandConfiguration {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecryptCommandConfiguration {
     pub silent: bool,
+    pub verify_checksum: bool,
 }
 
 pub fn get_commands() -> Vec<Command> {
@@ -220,12 +221,20 @@ pub fn get_commands() -> Vec<Command> {
             description: "Decrypt file(s) with your password",
             arguments: &["[FILE]..."],
         },
-        flags: &[Flag {
-            name: "silent",
-            short_name: "s",
-            description: "Do not display a progress bar",
-            has_value: false,
-        }],
+        flags: &[
+            Flag {
+                name: "silent",
+                short_name: "s",
+                description: "Do not display a progress bar",
+                has_value: false,
+            },
+            Flag {
+                name: "verify-checksum",
+                short_name: "v",
+                description: "Verify that the file matches the checksum",
+                has_value: false,
+            },
+        ],
         aliases: &[],
         callback: decrypt_command,
         contexts: &["fernet", "configuration"],
