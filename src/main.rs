@@ -45,10 +45,16 @@ impl Configuration {
             encrypt_command: EncryptCommandConfiguration {
                 silent: false,
                 hash_chunks: false,
+                progress_bar: String::from(
+                    "[{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
+                ),
             },
             decrypt_command: DecryptCommandConfiguration {
                 silent: false,
                 verify_checksum: false,
+                progress_bar: String::from(
+                    "[{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
+                ),
             },
         }
     }

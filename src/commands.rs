@@ -1,5 +1,6 @@
 use crate::utilities::{format_colors, quit_sfs, remove_colors};
 use crate::Configuration;
+use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use serde_derive::{Deserialize, Serialize};
 use sfs::Encrypter;
 use std::collections::HashMap;
@@ -62,12 +63,14 @@ pub struct LsCommandConfiguration {
 pub struct EncryptCommandConfiguration {
     pub silent: bool,
     pub hash_chunks: bool,
+    pub progress_bar: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecryptCommandConfiguration {
     pub silent: bool,
     pub verify_checksum: bool,
+    pub progress_bar: String,
 }
 
 pub fn get_commands() -> Vec<Command> {
@@ -609,8 +612,8 @@ pub fn encrypt_command(command: ParsedCommand) {
     }
 
     'input_loop: for input_path in input_paths {
-        let mut buffered_reader = match fs::File::open(&input_path) {
-            Ok(file) => BufReader::new(file),
+        let input_file = match fs::File::open(&input_path) {
+            Ok(file) => file,
             Err(error) => {
                 println!(
                     "{} {:?}",
@@ -620,6 +623,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 continue;
             }
         };
+        let mut buffered_reader = BufReader::new(&input_file);
         let output_path = input_path.to_string() + ".sfs";
         if fs::metadata(&output_path).is_ok() {
             let mut input = String::new();
@@ -667,6 +671,34 @@ pub fn encrypt_command(command: ParsedCommand) {
             false => Encrypter::encrypt,
         };
 
+        let file_size = match input_file.metadata() {
+            Ok(metadata) => metadata.len(),
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to get file metadata:$NORMAL$")),
+                    error
+                );
+                continue 'input_loop;
+            }
+        };
+        let mut progress_bar = None;
+        if !silent {
+            let new_progress_bar = ProgressBar::new(file_size);
+            new_progress_bar.set_style(
+                ProgressStyle::with_template(configuration.encrypt_command.progress_bar.as_str())
+                    .unwrap()
+                    .with_key(
+                        "eta",
+                        |state: &ProgressState, w: &mut dyn std::fmt::Write| {
+                            write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
+                        },
+                    )
+                    .progress_chars("#>-"),
+            );
+            progress_bar = Some(new_progress_bar);
+        }
+
         match output_file.write(&[0; 18]) {
             Ok(_) => (),
             Err(error) => {
@@ -708,6 +740,11 @@ pub fn encrypt_command(command: ParsedCommand) {
                     );
                     continue 'input_loop;
                 }
+            }
+
+            match &progress_bar {
+                Some(progress_bar) => progress_bar.set_position(encrypter.total_bytes),
+                None => (),
             }
         }
         let (has_checksum, checksum) = encrypter.get_checksum();
