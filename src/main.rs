@@ -7,8 +7,6 @@ use commands::{
     get_commands, Context, DecryptCommandConfiguration, EncryptCommandConfiguration,
     LsCommandConfiguration, ParsedCommand, ParsedFlag,
 };
-use utilities::{debug_print, format_colors, generate_fernet, quit_sfs, tokenize};
-
 use rustyline::highlight::{Highlighter, MatchingBracketHighlighter};
 use rustyline::{
     completion::FilenameCompleter, error::ReadlineError, hint::HistoryHinter, Config, Editor,
@@ -20,6 +18,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{fs, io::Write};
+use utilities::{debug_print, format_colors, generate_fernet, quit_sfs, tokenize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Configuration {
@@ -51,7 +50,7 @@ impl Configuration {
             },
             decrypt_command: DecryptCommandConfiguration {
                 silent: false,
-                verify_checksum: false,
+                verify_chunks: false,
                 progress_bar: String::from(
                     "[{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
                 ),

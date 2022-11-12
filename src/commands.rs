@@ -69,7 +69,7 @@ pub struct EncryptCommandConfiguration {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecryptCommandConfiguration {
     pub silent: bool,
-    pub verify_checksum: bool,
+    pub verify_chunks: bool,
     pub progress_bar: String,
 }
 
@@ -232,9 +232,9 @@ pub fn get_commands() -> Vec<Command> {
                 has_value: false,
             },
             Flag {
-                name: "verify-checksum",
+                name: "verify-chunks",
                 short_name: "v",
-                description: "Verify that the file matches the checksum",
+                description: "Verify that the chunks match the checksum",
                 has_value: false,
             },
         ],
