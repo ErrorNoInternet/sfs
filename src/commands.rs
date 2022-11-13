@@ -64,6 +64,7 @@ pub struct EncryptCommandConfiguration {
     pub silent: bool,
     pub overwrite: bool,
     pub hashing_algorithm: String,
+    pub chunk_size: u64,
     pub progress_bar: String,
 }
 
@@ -219,6 +220,12 @@ pub fn get_commands() -> Vec<Command> {
                 name: "hashing-algorithm",
                 short_name: "h",
                 description: "Which hashing algorithm to use (none/xxh3)",
+                has_value: true,
+            },
+            Flag {
+                name: "chunk-size",
+                short_name: "c",
+                description: "The size of the encrypted chunks",
                 has_value: true,
             },
         ],
@@ -613,6 +620,7 @@ pub fn encrypt_command(command: ParsedCommand) {
     let mut silent = configuration.encrypt_command.silent;
     let mut overwrite = configuration.encrypt_command.overwrite;
     let mut input_hashing_algorithm = configuration.encrypt_command.hashing_algorithm.clone();
+    let mut chunk_size = configuration.encrypt_command.chunk_size;
     let mut input_paths = Vec::new();
     for flag in command.flags {
         if flag.name.is_some() {
@@ -620,6 +628,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 "silent" => silent = true,
                 "overwrite" => overwrite = true,
                 "hashing-algorithm" => input_hashing_algorithm = flag.value.unwrap().to_owned(),
+                "chunk-size" => chunk_size = flag.value.unwrap().parse().unwrap_or(chunk_size),
                 _ => (),
             }
         } else if flag.value.is_some() {
@@ -692,7 +701,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 continue;
             }
         };
-        let mut buffer = vec![0; 1048576];
+        let mut buffer = vec![0; chunk_size as usize];
         let mut encrypter = Encrypter::new(&hashing_algorithm);
 
         let file_size = match input_file.metadata() {
@@ -723,9 +732,9 @@ pub fn encrypt_command(command: ParsedCommand) {
             progress_bar = Some(new_progress_bar);
         }
 
-        let metadata_structure = structure!("BBQQ");
+        let metadata_structure = structure!("BBQQQ");
         let encrypted_size =
-            determine_encrypted_size(metadata_structure.pack(0, 0, 0, 0).unwrap().len());
+            determine_encrypted_size(metadata_structure.pack(0, 0, 0, 0, 0).unwrap().len());
         match output_file.write(&vec![Default::default(); encrypted_size]) {
             Ok(_) => (),
             Err(error) => {
@@ -792,6 +801,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                             hashing_algorithm as u8,
                             encrypter.get_checksum(),
                             encrypter.total_bytes,
+                            chunk_size,
                         )
                         .unwrap(),
                 )

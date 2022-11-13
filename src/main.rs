@@ -45,6 +45,7 @@ impl Configuration {
                 silent: false,
                 overwrite: false,
                 hashing_algorithm: String::from("none"),
+                chunk_size: 1048576,
                 progress_bar: String::from(
                     "[{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
                 ),
