@@ -1,4 +1,4 @@
-use crate::utilities::{format_colors, quit_sfs, remove_colors};
+use crate::utilities::{determine_encrypted_size, format_colors, quit_sfs, remove_colors};
 use crate::Configuration;
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use serde_derive::{Deserialize, Serialize};
@@ -703,7 +703,10 @@ pub fn encrypt_command(command: ParsedCommand) {
             progress_bar = Some(new_progress_bar);
         }
 
-        match output_file.write(&[0; 64]) {
+        let metadata_structure = structure!("BBQQ");
+        let encrypted_size =
+            determine_encrypted_size(metadata_structure.pack(0, 0, 0, 0).unwrap().len());
+        match output_file.write(&vec![Default::default(); encrypted_size]) {
             Ok(_) => (),
             Err(error) => {
                 println!(
@@ -761,14 +764,18 @@ pub fn encrypt_command(command: ParsedCommand) {
             }
         };
         match output_file.write(
-            &structure!("BBQQ")
-                .pack(
-                    sfs::SFS_VERSION,
-                    hashing_algorithm as u8,
-                    encrypter.get_checksum(),
-                    encrypter.total_bytes,
+            &fernet
+                .encrypt(
+                    &metadata_structure
+                        .pack(
+                            sfs::SFS_VERSION,
+                            hashing_algorithm as u8,
+                            encrypter.get_checksum(),
+                            encrypter.total_bytes,
+                        )
+                        .unwrap(),
                 )
-                .unwrap(),
+                .into_bytes(),
         ) {
             Ok(_) => (),
             Err(error) => {
