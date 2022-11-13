@@ -279,7 +279,8 @@ pub fn get_commands() -> Vec<Command> {
 
 pub fn version_command(_command: ParsedCommand) {
     println!(
-        "SFS v{} ({})",
+        "{} v{} ({})",
+        format_colors(&String::from("$BOLD$SFS$NORMAL$")),
         sfs::resolve_version_string(sfs::CURRENT_SFS_VERSION),
         sfs::CURRENT_SFS_VERSION
     )
