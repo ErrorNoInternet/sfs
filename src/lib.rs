@@ -1,12 +1,33 @@
+use std::fmt;
 use xxhash_rust::xxh3::Xxh3;
 
-pub const SFS_VERSION: u8 = 1;
-pub const SFS_VERSION_STRING: &str = "1.0.0";
+pub const CURRENT_SFS_VERSION: u8 = 1;
+
+pub fn resolve_version_string(version: u8) -> &'static str {
+    match version {
+        1 => "1.0.0",
+        _ => "?",
+    }
+}
 
 #[derive(Debug, Clone)]
 pub enum HashingAlgorithm {
     None = 0,
     Xxh3 = 1,
+}
+impl HashingAlgorithm {
+    pub fn from_u8(value: u8) -> HashingAlgorithm {
+        match value {
+            0 => HashingAlgorithm::None,
+            1 => HashingAlgorithm::Xxh3,
+            _ => HashingAlgorithm::None,
+        }
+    }
+}
+impl fmt::Display for HashingAlgorithm {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "{:?}", self)
+    }
 }
 
 pub trait Hasher {

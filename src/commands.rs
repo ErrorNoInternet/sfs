@@ -5,7 +5,7 @@ use serde_derive::{Deserialize, Serialize};
 use sfs::{Encrypter, HashingAlgorithm};
 use std::collections::HashMap;
 use std::fs;
-use std::io::{BufReader, Read, Seek, Write};
+use std::io::{BufRead, BufReader, Read, Seek, Write};
 
 #[derive(Clone)]
 pub enum Context {
@@ -263,11 +263,26 @@ pub fn get_commands() -> Vec<Command> {
         callback: decrypt_command,
         contexts: &["fernet", "configuration"],
     });
+    commands.push(Command {
+        name: "information",
+        metadata: CommandMetadata {
+            description: "Display information about an encrypted file",
+            arguments: &["[FILE]..."],
+        },
+        flags: &[],
+        aliases: &["info", "metadata"],
+        callback: information_command,
+        contexts: &["fernet"],
+    });
     commands
 }
 
 pub fn version_command(_command: ParsedCommand) {
-    println!("SFS v{} ({})", sfs::SFS_VERSION_STRING, sfs::SFS_VERSION)
+    println!(
+        "SFS v{} ({})",
+        sfs::resolve_version_string(sfs::CURRENT_SFS_VERSION),
+        sfs::CURRENT_SFS_VERSION
+    )
 }
 
 pub fn help_command(command: ParsedCommand) {
@@ -797,7 +812,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 .encrypt(
                     &metadata_structure
                         .pack(
-                            sfs::SFS_VERSION,
+                            sfs::CURRENT_SFS_VERSION,
                             hashing_algorithm as u8,
                             encrypter.get_checksum(),
                             encrypter.total_bytes,
@@ -821,3 +836,92 @@ pub fn encrypt_command(command: ParsedCommand) {
 }
 
 pub fn decrypt_command(_command: ParsedCommand) {}
+
+pub fn information_command(command: ParsedCommand) {
+    let fernet = match command.contexts.get(&String::from("fernet")) {
+        Some(fernet) => match fernet {
+            Context::Fernet(fernet) => fernet,
+            _ => unreachable!(),
+        },
+        None => {
+            println!(
+                "{} Fernet was not passed by SFS!",
+                format_colors(&String::from("$BOLD$Fatal error:$NORMAL$")),
+            );
+            return;
+        }
+    };
+
+    let mut input_paths = Vec::new();
+    for flag in command.flags {
+        if flag.name.is_none() && flag.value.is_some() {
+            input_paths.push(flag.value.unwrap())
+        }
+    }
+
+    for input_path in input_paths {
+        let input_file = match fs::File::open(&input_path) {
+            Ok(file) => file,
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to read file:$NORMAL$")),
+                    error
+                );
+                continue;
+            }
+        };
+        let mut buffer = String::new();
+        match BufReader::new(&input_file).read_line(&mut buffer) {
+            Ok(_) => buffer = buffer.trim().to_string(),
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to read file:$NORMAL$")),
+                    error
+                );
+                continue;
+            }
+        }
+
+        let metadata_bytes = match fernet.decrypt(&buffer) {
+            Ok(metadata_bytes) => metadata_bytes,
+            Err(error) => {
+                println!(
+                    "{} {:?} (incorrect password?)",
+                    format_colors(&String::from("$BOLD$Unable to decrypt file:$NORMAL$")),
+                    error
+                );
+                continue;
+            }
+        };
+        let metadata_structure = structure!("BBQQQ");
+        let metadata = match metadata_structure.unpack(metadata_bytes) {
+            Ok(metadata) => metadata,
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to unpack metadata:$NORMAL$")),
+                    error
+                );
+                continue;
+            }
+        };
+
+        println!(
+            "{}",
+            format_colors(&format!(
+                "$BOLD$`{}`$NORMAL$:\n\t$BOLD$SFS Version:$NORMAL$ {} ({})\n\t$BOLD$Decrypted Size:$NORMAL$ {} ({})\n\t$BOLD$Hashing Algorithm:$NORMAL$ {}\n\t$BOLD$Checksum:$NORMAL$ {:X}\n\t$BOLD$Chunk Size:$NORMAL$ {} ({})",
+                input_path,
+                sfs::resolve_version_string(metadata.0),
+                metadata.0,
+                metadata.3,
+                humansize::format_size(metadata.3, humansize::BINARY),
+                HashingAlgorithm::from_u8(metadata.1),
+                metadata.2,
+                metadata.4,
+                humansize::format_size(metadata.4, humansize::BINARY),
+            ))
+        )
+    }
+}
