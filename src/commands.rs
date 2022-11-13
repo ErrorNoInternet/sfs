@@ -727,22 +727,18 @@ pub fn encrypt_command(command: ParsedCommand) {
                 continue 'input_loop;
             }
         };
-        let mut progress_bar = None;
-        if !silent {
-            let new_progress_bar = ProgressBar::new(file_size);
-            new_progress_bar.set_style(
-                ProgressStyle::with_template(configuration.encrypt_command.progress_bar.as_str())
-                    .unwrap()
-                    .with_key(
-                        "eta",
-                        |state: &ProgressState, w: &mut dyn std::fmt::Write| {
-                            write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
-                        },
-                    )
-                    .progress_chars("#>-"),
-            );
-            progress_bar = Some(new_progress_bar);
-        }
+        let progress_bar = ProgressBar::new(file_size);
+        progress_bar.set_style(
+            ProgressStyle::with_template(configuration.encrypt_command.progress_bar.as_str())
+                .unwrap()
+                .with_key(
+                    "eta",
+                    |state: &ProgressState, w: &mut dyn std::fmt::Write| {
+                        write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
+                    },
+                )
+                .progress_chars("#>-"),
+        );
 
         let metadata_structure = structure!("BBQQQ");
         let encrypted_size =
@@ -788,9 +784,8 @@ pub fn encrypt_command(command: ParsedCommand) {
                 }
             }
 
-            match &progress_bar {
-                Some(progress_bar) => progress_bar.set_position(encrypter.total_bytes),
-                None => (),
+            if !silent {
+                progress_bar.set_position(encrypter.total_bytes)
             }
         }
         match output_file.seek(std::io::SeekFrom::Start(0)) {
