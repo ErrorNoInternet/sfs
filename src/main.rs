@@ -43,6 +43,7 @@ impl Configuration {
             },
             encrypt_command: EncryptCommandConfiguration {
                 silent: false,
+                overwrite: false,
                 hashing_algorithm: String::from("none"),
                 progress_bar: String::from(
                     "[{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
@@ -50,6 +51,7 @@ impl Configuration {
             },
             decrypt_command: DecryptCommandConfiguration {
                 silent: false,
+                overwrite: false,
                 verify_chunks: false,
                 progress_bar: String::from(
                     "[{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",

@@ -62,6 +62,7 @@ pub struct LsCommandConfiguration {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptCommandConfiguration {
     pub silent: bool,
+    pub overwrite: bool,
     pub hashing_algorithm: String,
     pub progress_bar: String,
 }
@@ -69,6 +70,7 @@ pub struct EncryptCommandConfiguration {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecryptCommandConfiguration {
     pub silent: bool,
+    pub overwrite: bool,
     pub verify_chunks: bool,
     pub progress_bar: String,
 }
@@ -208,6 +210,12 @@ pub fn get_commands() -> Vec<Command> {
                 has_value: false,
             },
             Flag {
+                name: "overwrite",
+                short_name: "f",
+                description: "Overwrite the output file even if it exists",
+                has_value: false,
+            },
+            Flag {
                 name: "hashing-algorithm",
                 short_name: "h",
                 description: "Which hashing algorithm to use (none/xxh3)",
@@ -229,6 +237,12 @@ pub fn get_commands() -> Vec<Command> {
                 name: "silent",
                 short_name: "s",
                 description: "Do not display a progress bar",
+                has_value: false,
+            },
+            Flag {
+                name: "overwrite",
+                short_name: "f",
+                description: "Overwrite the output file even if it exists",
                 has_value: false,
             },
             Flag {
@@ -597,12 +611,14 @@ pub fn encrypt_command(command: ParsedCommand) {
     };
 
     let mut silent = configuration.encrypt_command.silent;
+    let mut overwrite = configuration.encrypt_command.overwrite;
     let mut input_hashing_algorithm = configuration.encrypt_command.hashing_algorithm.clone();
     let mut input_paths = Vec::new();
     for flag in command.flags {
         if flag.name.is_some() {
             match flag.name.unwrap().as_str() {
                 "silent" => silent = true,
+                "overwrite" => overwrite = true,
                 "hashing-algorithm" => input_hashing_algorithm = flag.value.unwrap().to_owned(),
                 _ => (),
             }
@@ -633,29 +649,33 @@ pub fn encrypt_command(command: ParsedCommand) {
         };
         let mut buffered_reader = BufReader::new(&input_file);
         let output_path = input_path.to_string() + ".sfs";
-        if fs::metadata(&output_path).is_ok() {
-            let mut input = String::new();
-            loop {
-                if input.to_lowercase().starts_with("n") {
-                    return;
-                } else if input.to_lowercase().starts_with("y") {
-                    break;
-                } else {
-                    print!(
+        if !overwrite {
+            if fs::metadata(&output_path).is_ok() {
+                let mut input = String::new();
+                loop {
+                    if input.to_lowercase().starts_with("n") {
+                        return;
+                    } else if input.to_lowercase().starts_with("y") {
+                        break;
+                    } else {
+                        print!(
                         "{}",
                         format_colors(&format!("$BOLD${}$NORMAL$ already exists. Do you want to overwrite it? $BOLD$Y/N:$NORMAL$ ", output_path))
                     );
-                    std::io::stdout().flush().unwrap();
-                    input.clear();
-                    match std::io::stdin().read_line(&mut input) {
-                        Ok(_) => (),
-                        Err(error) => {
-                            println!(
-                                "{} {:?}",
-                                format_colors(&String::from("$BOLD$Unable to read input:$NORMAL$")),
-                                error
-                            );
-                            std::process::exit(1)
+                        std::io::stdout().flush().unwrap();
+                        input.clear();
+                        match std::io::stdin().read_line(&mut input) {
+                            Ok(_) => (),
+                            Err(error) => {
+                                println!(
+                                    "{} {:?}",
+                                    format_colors(&String::from(
+                                        "$BOLD$Unable to read input:$NORMAL$"
+                                    )),
+                                    error
+                                );
+                                std::process::exit(1)
+                            }
                         }
                     }
                 }
