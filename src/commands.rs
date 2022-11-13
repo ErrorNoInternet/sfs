@@ -72,7 +72,7 @@ pub struct EncryptCommandConfiguration {
 pub struct DecryptCommandConfiguration {
     pub silent: bool,
     pub overwrite: bool,
-    pub verify_chunks: bool,
+    pub no_verify_chunks: bool,
     pub progress_bar: String,
 }
 
@@ -253,9 +253,9 @@ pub fn get_commands() -> Vec<Command> {
                 has_value: false,
             },
             Flag {
-                name: "verify-chunks",
-                short_name: "v",
-                description: "Verify that the chunks match the checksum",
+                name: "no-verify-chunks",
+                short_name: "n",
+                description: "Don't verify that the chunks match the checksum",
                 has_value: false,
             },
         ],
