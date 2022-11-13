@@ -3,6 +3,7 @@ use xxhash_rust::xxh3::Xxh3;
 pub const SFS_VERSION: u8 = 1;
 pub const SFS_VERSION_STRING: &str = "1.0";
 
+#[derive(Debug, Clone)]
 pub enum HashingAlgorithm {
     None = 0,
     Xxh3 = 1,
@@ -14,6 +15,7 @@ pub trait Hasher {
     fn reset(&mut self);
 }
 
+#[derive(Clone)]
 pub struct DummyHasher {}
 impl Hasher for DummyHasher {
     fn update(&mut self, _: &[u8]) {}
@@ -23,6 +25,7 @@ impl Hasher for DummyHasher {
     fn reset(&mut self) {}
 }
 
+#[derive(Clone)]
 pub struct Xxh3Hasher {
     pub hasher: Xxh3,
 }
