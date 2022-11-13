@@ -2,7 +2,7 @@ use crate::utilities::{format_colors, quit_sfs, remove_colors};
 use crate::Configuration;
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use serde_derive::{Deserialize, Serialize};
-use sfs::Encrypter;
+use sfs::{Encrypter, HashingAlgorithm};
 use std::collections::HashMap;
 use std::fs;
 use std::io::{BufReader, Read, Seek, Write};
@@ -62,7 +62,7 @@ pub struct LsCommandConfiguration {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptCommandConfiguration {
     pub silent: bool,
-    pub hash_chunks: bool,
+    pub hashing_algorithm: String,
     pub progress_bar: String,
 }
 
@@ -208,10 +208,10 @@ pub fn get_commands() -> Vec<Command> {
                 has_value: false,
             },
             Flag {
-                name: "hash-chunks",
+                name: "hashing-algorithm",
                 short_name: "h",
-                description: "Keep a checksum of all the chunks",
-                has_value: false,
+                description: "Which hashing algorithm to use (none/xxh3)",
+                has_value: true,
             },
         ],
         aliases: &[],
@@ -597,19 +597,27 @@ pub fn encrypt_command(command: ParsedCommand) {
     };
 
     let mut silent = configuration.encrypt_command.silent;
-    let mut hash_chunks = configuration.encrypt_command.hash_chunks;
+    let mut input_hashing_algorithm = configuration.encrypt_command.hashing_algorithm.clone();
     let mut input_paths = Vec::new();
     for flag in command.flags {
         if flag.name.is_some() {
             match flag.name.unwrap().as_str() {
                 "silent" => silent = true,
-                "hash-chunks" => hash_chunks = true,
+                "hashing-algorithm" => input_hashing_algorithm = flag.value.unwrap().to_owned(),
                 _ => (),
             }
         } else if flag.value.is_some() {
             input_paths.push(flag.value.unwrap())
         }
     }
+    let hashing_algorithm = match input_hashing_algorithm.to_lowercase().as_str() {
+        "none" => HashingAlgorithm::None,
+        "xxh3" => HashingAlgorithm::Xxh3,
+        _ => {
+            println!("Unknown hashing algorithm, defaulting to none");
+            HashingAlgorithm::None
+        }
+    };
 
     'input_loop: for input_path in input_paths {
         let input_file = match fs::File::open(&input_path) {
@@ -665,11 +673,7 @@ pub fn encrypt_command(command: ParsedCommand) {
             }
         };
         let mut buffer = vec![0; 1048576];
-        let mut encrypter = Encrypter::new();
-        let encrypt_function = match hash_chunks {
-            true => Encrypter::encrypt_with_hash,
-            false => Encrypter::encrypt,
-        };
+        let mut encrypter = Encrypter::new(&hashing_algorithm);
 
         let file_size = match input_file.metadata() {
             Ok(metadata) => metadata.len(),
@@ -699,7 +703,7 @@ pub fn encrypt_command(command: ParsedCommand) {
             progress_bar = Some(new_progress_bar);
         }
 
-        match output_file.write(&[0; 18]) {
+        match output_file.write(&[0; 64]) {
             Ok(_) => (),
             Err(error) => {
                 println!(
@@ -727,9 +731,7 @@ pub fn encrypt_command(command: ParsedCommand) {
             }
 
             let mut encrypted = "\n".as_bytes().to_vec();
-            encrypted.append(
-                &mut encrypt_function(&mut encrypter, &fernet, &buffer[..read]).into_bytes(),
-            );
+            encrypted.append(&mut encrypter.encrypt(&fernet, &buffer[..read]).into_bytes());
             match output_file.write(&encrypted) {
                 Ok(_) => (),
                 Err(error) => {
@@ -747,7 +749,6 @@ pub fn encrypt_command(command: ParsedCommand) {
                 None => (),
             }
         }
-        let (has_checksum, checksum) = encrypter.get_checksum();
         match output_file.seek(std::io::SeekFrom::Start(0)) {
             Ok(_) => (),
             Err(error) => {
@@ -760,11 +761,11 @@ pub fn encrypt_command(command: ParsedCommand) {
             }
         };
         match output_file.write(
-            &structure!("B?QQ")
+            &structure!("BBQQ")
                 .pack(
                     sfs::SFS_VERSION,
-                    has_checksum,
-                    checksum,
+                    hashing_algorithm as u8,
+                    encrypter.get_checksum(),
                     encrypter.total_bytes,
                 )
                 .unwrap(),

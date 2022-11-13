@@ -43,7 +43,7 @@ impl Configuration {
             },
             encrypt_command: EncryptCommandConfiguration {
                 silent: false,
-                hash_chunks: false,
+                hashing_algorithm: String::from("none"),
                 progress_bar: String::from(
                     "[{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
                 ),

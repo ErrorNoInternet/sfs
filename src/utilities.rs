@@ -1,4 +1,12 @@
+use fernet::Fernet;
 use sha2::{Digest, Sha256};
+
+pub fn determine_encrypted_size(input_size: usize) -> usize {
+    Fernet::new(&Fernet::generate_key())
+        .unwrap()
+        .encrypt(&"A".repeat(input_size).into_bytes())
+        .len()
+}
 
 pub fn debug_print(message: &String) {
     println!(
