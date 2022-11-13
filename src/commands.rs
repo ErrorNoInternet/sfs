@@ -305,14 +305,10 @@ pub fn help_command(command: ParsedCommand) {
                     if matched {
                         command_found = true;
 
-                        let mut context_list = Vec::new();
-                        for context in command.contexts {
-                            context_list.push(context.clone())
-                        }
-                        let mut contexts = String::new();
+                        let mut contexts = String::from("None");
                         if command.contexts.len() > 0 {
-                            contexts =
-                                format!("\t$BOLD$Requires:$NORMAL$ {}\n", context_list.join(", "));
+                            contexts.clear();
+                            contexts = command.contexts.join(", ");
                         }
 
                         let mut usage = format!("{}", command.name);
@@ -335,23 +331,23 @@ pub fn help_command(command: ParsedCommand) {
                         let mut flags = String::from(" None");
                         if command.flags.len() > 0 {
                             flags = String::new();
-                        }
-                        for flag in command.flags {
-                            let mut has_value = "";
-                            if flag.has_value {
-                                has_value = " <value>"
+                            for flag in command.flags {
+                                let mut has_value = "";
+                                if flag.has_value {
+                                    has_value = " <value>"
+                                }
+                                flags += format!(
+                                    "\n\t\t$BOLD$-{}$NORMAL$, $BOLD$--{}{}$NORMAL$\n\t\t\t{}",
+                                    flag.short_name, flag.name, has_value, flag.description
+                                )
+                                .as_str()
                             }
-                            flags += format!(
-                                "\n\t\t$BOLD$-{}$NORMAL$, $BOLD$--{}{}$NORMAL$\n\t\t\t{}",
-                                flag.short_name, flag.name, has_value, flag.description
-                            )
-                            .as_str()
                         }
 
                         println!(
                             "{}",
                             format_colors(&format!(
-                                "$BOLD$`{}`$NORMAL${}:\n\t{}\n\n{}\t$BOLD$Usage:$NORMAL$ {}\n\t$BOLD$Flags:$NORMAL${}",
+                                "$BOLD$`{}`$NORMAL${}:\n\t{}\n\n\t$BOLD$Requires:$NORMAL$ {}\n\t$BOLD$Usage:$NORMAL$ {}\n\t$BOLD$Flags:$NORMAL${}",
                                 command.name, aliases, command.metadata.description, contexts, usage, flags,
                             ))
                         );
