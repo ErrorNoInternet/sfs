@@ -279,10 +279,10 @@ pub fn get_commands() -> Vec<Command> {
 
 pub fn version_command(_command: ParsedCommand) {
     println!(
-        "{} v{} ({})",
+        "{} v{} (file format v{})",
         format_colors(&String::from("$BOLD$SFS$NORMAL$")),
-        sfs::resolve_version_string(sfs::CURRENT_SFS_VERSION),
-        sfs::CURRENT_SFS_VERSION
+        sfs::SFS_VERSION_STRING,
+        sfs::SFS_FORMAT_VERSION,
     )
 }
 
@@ -804,7 +804,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 .encrypt(
                     &metadata_structure
                         .pack(
-                            sfs::CURRENT_SFS_VERSION,
+                            sfs::SFS_FORMAT_VERSION,
                             hashing_algorithm as u8,
                             encrypter.get_checksum(),
                             encrypter.total_bytes,
@@ -903,9 +903,8 @@ pub fn information_command(command: ParsedCommand) {
         println!(
             "{}",
             format_colors(&format!(
-                "$BOLD$`{}`$NORMAL$:\n\t$BOLD$SFS Version:$NORMAL$ {} ({})\n\t$BOLD$Decrypted Size:$NORMAL$ {} ({})\n\t$BOLD$Hashing Algorithm:$NORMAL$ {}\n\t$BOLD$Checksum:$NORMAL$ {:X}\n\t$BOLD$Chunk Size:$NORMAL$ {} ({})",
+                "$BOLD$`{}`$NORMAL$:\n\t$BOLD$SFS Format Version:$NORMAL$ {}\n\t$BOLD$Decrypted Size:$NORMAL$ {} ({})\n\t$BOLD$Hashing Algorithm:$NORMAL$ {}\n\t$BOLD$Checksum:$NORMAL$ {:X}\n\t$BOLD$Chunk Size:$NORMAL$ {} ({})",
                 input_path,
-                sfs::resolve_version_string(metadata.0),
                 metadata.0,
                 metadata.3,
                 humansize::format_size(metadata.3, humansize::BINARY),

@@ -1,14 +1,8 @@
 use std::fmt;
 use xxhash_rust::xxh3::Xxh3;
 
-pub const CURRENT_SFS_VERSION: u8 = 1;
-
-pub fn resolve_version_string(version: u8) -> &'static str {
-    match version {
-        1 => "1.0.0",
-        _ => "?",
-    }
-}
+pub const SFS_FORMAT_VERSION: u8 = 1;
+pub const SFS_VERSION_STRING: &str = "1.0.0";
 
 #[derive(Debug, Clone)]
 pub enum HashingAlgorithm {
