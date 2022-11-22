@@ -1,8 +1,6 @@
 mod commands;
 mod utilities;
 
-#[macro_use]
-extern crate structure;
 use commands::{
     get_commands, Context, DecryptCommandConfiguration, EncryptCommandConfiguration,
     LsCommandConfiguration, ParsedCommand, ParsedFlag,
@@ -45,7 +43,7 @@ impl Configuration {
                 silent: false,
                 overwrite: false,
                 hashing_algorithm: String::from("xxh3"),
-                chunk_size: 1048576,
+                chunk_size: 1000000,
                 progress_bar: String::from(
                     "[{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
                 ),

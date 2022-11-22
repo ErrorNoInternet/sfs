@@ -2,7 +2,7 @@ use crate::utilities::{determine_encrypted_size, format_colors, quit_sfs, remove
 use crate::Configuration;
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use serde_derive::{Deserialize, Serialize};
-use sfs::{Encrypter, HashingAlgorithm};
+use sfs::{Encrypter, FileMetadata, HashingAlgorithm};
 use std::collections::HashMap;
 use std::fs;
 use std::io::{BufRead, BufReader, Read, Seek, Write};
@@ -740,9 +740,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 .progress_chars("#>-"),
         );
 
-        let metadata_structure = structure!("BBQQQ");
-        let encrypted_size =
-            determine_encrypted_size(metadata_structure.pack(0, 0, 0, 0, 0).unwrap().len());
+        let encrypted_size = determine_encrypted_size(FileMetadata::default().pack().len());
         match output_file.write(&vec![Default::default(); encrypted_size]) {
             Ok(_) => (),
             Err(error) => {
@@ -802,15 +800,14 @@ pub fn encrypt_command(command: ParsedCommand) {
         match output_file.write(
             &fernet
                 .encrypt(
-                    &metadata_structure
-                        .pack(
-                            sfs::SFS_FORMAT_VERSION,
-                            hashing_algorithm as u8,
-                            encrypter.get_checksum(),
-                            encrypter.total_bytes,
-                            chunk_size,
-                        )
-                        .unwrap(),
+                    &FileMetadata {
+                        format_version: sfs::SFS_FORMAT_VERSION,
+                        hashing_algorithm: hashing_algorithm as u8,
+                        checksum: encrypter.get_checksum(),
+                        total_bytes: encrypter.total_bytes,
+                        chunk_size,
+                    }
+                    .pack(),
                 )
                 .into_bytes(),
         ) {
@@ -887,8 +884,7 @@ pub fn information_command(command: ParsedCommand) {
                 continue;
             }
         };
-        let metadata_structure = structure!("BBQQQ");
-        let metadata = match metadata_structure.unpack(metadata_bytes) {
+        let metadata = match FileMetadata::parse(&metadata_bytes) {
             Ok(metadata) => metadata,
             Err(error) => {
                 println!(
@@ -905,13 +901,13 @@ pub fn information_command(command: ParsedCommand) {
             format_colors(&format!(
                 "$BOLD$`{}`$NORMAL$:\n\t$BOLD$SFS Format Version:$NORMAL$ {}\n\t$BOLD$Decrypted Size:$NORMAL$ {} ({})\n\t$BOLD$Hashing Algorithm:$NORMAL$ {}\n\t$BOLD$Checksum:$NORMAL$ {:X}\n\t$BOLD$Chunk Size:$NORMAL$ {} ({})",
                 input_path,
-                metadata.0,
-                metadata.3,
-                humansize::format_size(metadata.3, humansize::BINARY),
-                HashingAlgorithm::from_u8(metadata.1),
-                metadata.2,
-                metadata.4,
-                humansize::format_size(metadata.4, humansize::BINARY),
+                metadata.format_version,
+                metadata.total_bytes,
+                humansize::format_size(metadata.total_bytes, humansize::DECIMAL),
+                HashingAlgorithm::from_u8(metadata.hashing_algorithm),
+                metadata.checksum,
+                metadata.chunk_size,
+                humansize::format_size(metadata.chunk_size, humansize::DECIMAL),
             ))
         )
     }
