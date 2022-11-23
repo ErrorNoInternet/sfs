@@ -212,7 +212,7 @@ pub fn get_commands() -> Vec<Command> {
             },
             Flag {
                 name: "overwrite",
-                short_name: "f",
+                short_name: "o",
                 description: "Overwrite the output file even if it exists",
                 has_value: false,
             },
@@ -248,7 +248,7 @@ pub fn get_commands() -> Vec<Command> {
             },
             Flag {
                 name: "overwrite",
-                short_name: "f",
+                short_name: "o",
                 description: "Overwrite the output file even if it exists",
                 has_value: false,
             },
