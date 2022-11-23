@@ -30,10 +30,11 @@ impl FileMetadata {
 
     pub fn parse(metadata_bytes: &Vec<u8>) -> Result<Self, String> {
         let version_structure = structure!("B");
-        let version_metadata = match version_structure.unpack(&metadata_bytes[..1]) {
-            Ok(version_metadata) => version_metadata,
-            Err(error) => return Err(error.to_string()),
-        };
+        let version_metadata =
+            match version_structure.unpack(&metadata_bytes[..version_structure.size()]) {
+                Ok(version_metadata) => version_metadata,
+                Err(error) => return Err(error.to_string()),
+            };
         match version_metadata.0 {
             1 => {
                 let metadata_structure = structure!("BBQQQ");
