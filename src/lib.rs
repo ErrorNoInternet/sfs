@@ -52,7 +52,7 @@ impl FileMetadata {
                 })
             }
             _ => Ok(FileMetadata {
-                format_version: 0,
+                format_version: version_metadata.0,
                 hashing_algorithm: 0,
                 checksum: 0,
                 total_bytes: 0,
