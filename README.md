@@ -1,7 +1,7 @@
 # SFS (SecureFS)
-![SFS Showcase](./showcase.svg)
-
 A shell that allows you to encrypt/decrypt your files with a password
+
+![SFS Showcase](./showcase.svg)
 
 SFS encrypts and decrypts files using a fernet (AES-128), generated from a password that you enter every time you open SFS.\
 SFS also has its own implementation of commands like `ls`, `cp`, `mv`, `rm`, `clear`, and has its own command/flag parser.
