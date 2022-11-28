@@ -117,12 +117,12 @@ impl Hasher for Xxh3Hasher {
 }
 
 pub struct Encrypter<'a> {
+    pub fernet: fernet::Fernet,
     pub hasher: Box<dyn Hasher + 'a>,
     pub total_bytes: u64,
 }
-
 impl<'a> Encrypter<'a> {
-    pub fn new(hashing_algorithm: &HashingAlgorithm) -> Encrypter<'a> {
+    pub fn new(fernet: fernet::Fernet, hashing_algorithm: &HashingAlgorithm) -> Encrypter<'a> {
         let hasher: Box<dyn Hasher> = match hashing_algorithm {
             HashingAlgorithm::None => Box::new(DummyHasher {}),
             HashingAlgorithm::Xxh3 => Box::new(Xxh3Hasher {
@@ -130,6 +130,7 @@ impl<'a> Encrypter<'a> {
             }),
         };
         Encrypter {
+            fernet,
             hasher,
             total_bytes: 0,
         }
@@ -139,9 +140,45 @@ impl<'a> Encrypter<'a> {
         self.hasher.digest()
     }
 
-    pub fn encrypt(&mut self, fernet: &fernet::Fernet, data: &[u8]) -> String {
+    pub fn encrypt(&mut self, data: &[u8]) -> String {
         self.total_bytes += data.len() as u64;
         self.hasher.update(&data);
-        fernet.encrypt(&data)
+        self.fernet.encrypt(&data)
+    }
+}
+
+pub struct Decrypter<'a> {
+    pub fernet: fernet::Fernet,
+    pub hasher: Box<dyn Hasher + 'a>,
+    pub total_bytes: u64,
+}
+impl<'a> Decrypter<'a> {
+    pub fn new(fernet: fernet::Fernet, hashing_algorithm: &HashingAlgorithm) -> Decrypter<'a> {
+        let hasher: Box<dyn Hasher> = match hashing_algorithm {
+            HashingAlgorithm::None => Box::new(DummyHasher {}),
+            HashingAlgorithm::Xxh3 => Box::new(Xxh3Hasher {
+                hasher: Xxh3::new(),
+            }),
+        };
+        Decrypter {
+            fernet,
+            hasher,
+            total_bytes: 0,
+        }
+    }
+
+    pub fn get_checksum(&mut self) -> u64 {
+        self.hasher.digest()
+    }
+
+    pub fn decrypt(&mut self, encrypted_data: &str) -> Result<Vec<u8>, String> {
+        match self.fernet.decrypt(&encrypted_data) {
+            Ok(data) => {
+                self.total_bytes += data.len() as u64;
+                self.hasher.update(&data);
+                Ok(data)
+            }
+            Err(error) => Err(error.to_string()),
+        }
     }
 }
