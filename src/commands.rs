@@ -739,7 +739,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 let mut input = String::new();
                 loop {
                     if input.to_lowercase().starts_with("n") {
-                        return;
+                        continue 'input_loop;
                     } else if input.to_lowercase().starts_with("y") {
                         break;
                     } else {
@@ -1016,7 +1016,7 @@ pub fn decrypt_command(command: ParsedCommand) {
             Ok(metadata_bytes) => metadata_bytes,
             Err(error) => {
                 println!(
-                    "{} {:?} (incorrect password?)",
+                    "{} {:?} (possibly incorrect password?)",
                     format_colors(&String::from("$BOLD$Unable to decrypt metadata:$NORMAL$")),
                     error
                 );
@@ -1056,7 +1056,7 @@ pub fn decrypt_command(command: ParsedCommand) {
                 let mut input = String::new();
                 loop {
                     if input.to_lowercase().starts_with("n") {
-                        return;
+                        continue 'input_loop;
                     } else if input.to_lowercase().starts_with("y") {
                         break;
                     } else {
@@ -1141,7 +1141,7 @@ pub fn decrypt_command(command: ParsedCommand) {
                 Ok(decrypted) => decrypted,
                 Err(error) => {
                     println!(
-                        "{} {:?} (incorrect password?)",
+                        "{} {:?} (possibly incorrect password?)",
                         format_colors(&String::from("$BOLD$Unable to decrypt chunk:$NORMAL$")),
                         error
                     );
@@ -1240,7 +1240,7 @@ pub fn information_command(command: ParsedCommand) {
             Ok(metadata_bytes) => metadata_bytes,
             Err(error) => {
                 println!(
-                    "{} {:?} (incorrect password?)",
+                    "{} {:?} (possibly incorrect password?)",
                     format_colors(&String::from("$BOLD$Unable to decrypt metadata:$NORMAL$")),
                     error
                 );
