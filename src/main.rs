@@ -44,7 +44,7 @@ impl Configuration {
                 overwrite: false,
                 hashing_algorithm: String::from("xxh3"),
                 chunk_size: 1000000,
-                progress_bar: String::from(
+                progress_bar_format: String::from(
                     "[{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
                 ),
             },
@@ -52,7 +52,7 @@ impl Configuration {
                 silent: false,
                 overwrite: false,
                 no_verify_chunks: false,
-                progress_bar: String::from(
+                progress_bar_format: String::from(
                     "[{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
                 ),
             },

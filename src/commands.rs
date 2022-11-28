@@ -65,7 +65,7 @@ pub struct EncryptCommandConfiguration {
     pub overwrite: bool,
     pub hashing_algorithm: String,
     pub chunk_size: u64,
-    pub progress_bar: String,
+    pub progress_bar_format: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -73,7 +73,7 @@ pub struct DecryptCommandConfiguration {
     pub silent: bool,
     pub overwrite: bool,
     pub no_verify_chunks: bool,
-    pub progress_bar: String,
+    pub progress_bar_format: String,
 }
 
 pub fn get_commands() -> Vec<Command> {
@@ -747,15 +747,17 @@ pub fn encrypt_command(command: ParsedCommand) {
         };
         let progress_bar = ProgressBar::new(file_size);
         progress_bar.set_style(
-            ProgressStyle::with_template(configuration.encrypt_command.progress_bar.as_str())
-                .unwrap()
-                .with_key(
-                    "eta",
-                    |state: &ProgressState, w: &mut dyn std::fmt::Write| {
-                        write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
-                    },
-                )
-                .progress_chars("#>-"),
+            ProgressStyle::with_template(
+                &configuration.encrypt_command.progress_bar_format.as_str(),
+            )
+            .unwrap()
+            .with_key(
+                "eta",
+                |state: &ProgressState, w: &mut dyn std::fmt::Write| {
+                    write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
+                },
+            )
+            .progress_chars("#>-"),
         );
 
         let encrypted_size = determine_encrypted_size(FileMetadata::default().pack().len());
@@ -1009,15 +1011,17 @@ pub fn decrypt_command(command: ParsedCommand) {
         let mut decrypter = Decrypter::new(fernet.to_owned(), &hashing_algorithm);
         let progress_bar = ProgressBar::new(metadata.total_bytes);
         progress_bar.set_style(
-            ProgressStyle::with_template(configuration.encrypt_command.progress_bar.as_str())
-                .unwrap()
-                .with_key(
-                    "eta",
-                    |state: &ProgressState, w: &mut dyn std::fmt::Write| {
-                        write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
-                    },
-                )
-                .progress_chars("#>-"),
+            ProgressStyle::with_template(
+                &configuration.encrypt_command.progress_bar_format.as_str(),
+            )
+            .unwrap()
+            .with_key(
+                "eta",
+                |state: &ProgressState, w: &mut dyn std::fmt::Write| {
+                    write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
+                },
+            )
+            .progress_chars("#>-"),
         );
 
         loop {
