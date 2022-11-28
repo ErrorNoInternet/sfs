@@ -906,14 +906,16 @@ pub fn decrypt_command(command: ParsedCommand) {
         }
     };
 
+    let mut recursive = false;
     let mut silent = configuration.decrypt_command.silent;
     let mut overwrite = configuration.decrypt_command.overwrite;
     let mut no_verify_chunks = configuration.decrypt_command.no_verify_chunks;
     let mut force = false;
-    let mut input_paths = Vec::new();
+    let mut raw_input_paths = Vec::new();
     for flag in command.flags {
         if flag.name.is_some() {
             match flag.name.unwrap().as_str() {
+                "recursive" => recursive = true,
                 "silent" => silent = true,
                 "overwrite" => overwrite = true,
                 "no-verify-chunks" => no_verify_chunks = true,
@@ -921,8 +923,33 @@ pub fn decrypt_command(command: ParsedCommand) {
                 _ => (),
             }
         } else if flag.value.is_some() {
-            input_paths.push(flag.value.unwrap())
+            raw_input_paths.push(flag.value.unwrap())
         }
+    }
+    let mut input_paths = Vec::new();
+    if recursive {
+        for input_path in &raw_input_paths {
+            for entry in WalkDir::new(&input_path) {
+                let path = match entry {
+                    Ok(entry) => entry.path().to_owned(),
+                    Err(error) => {
+                        println!(
+                            "{} {:?}",
+                            format_colors(&String::from(
+                                "$BOLD$Unable to get file information:$NORMAL$"
+                            )),
+                            error
+                        );
+                        continue;
+                    }
+                };
+                if path.is_file() {
+                    input_paths.push(path.display().to_string());
+                }
+            }
+        }
+    } else {
+        input_paths = raw_input_paths
     }
 
     'input_loop: for input_path in input_paths {
