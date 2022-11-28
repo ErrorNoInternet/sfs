@@ -2,7 +2,7 @@ use crate::utilities::{determine_encrypted_size, format_colors, quit_sfs, remove
 use crate::Configuration;
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use serde_derive::{Deserialize, Serialize};
-use sfs::{Encrypter, FileMetadata, HashingAlgorithm};
+use sfs::{Decrypter, Encrypter, FileMetadata, HashingAlgorithm};
 use std::collections::HashMap;
 use std::fs;
 use std::io::{BufRead, BufReader, Read, Seek, Write};
@@ -832,7 +832,235 @@ pub fn encrypt_command(command: ParsedCommand) {
     }
 }
 
-pub fn decrypt_command(_command: ParsedCommand) {}
+pub fn decrypt_command(command: ParsedCommand) {
+    let fernet = match command.contexts.get(&String::from("fernet")) {
+        Some(fernet) => match fernet {
+            Context::Fernet(fernet) => fernet,
+            _ => unreachable!(),
+        },
+        None => {
+            println!(
+                "{} Fernet was not passed by SFS!",
+                format_colors(&String::from("$BOLD$Fatal error:$NORMAL$")),
+            );
+            return;
+        }
+    };
+    let configuration = match command.contexts.get(&String::from("configuration")) {
+        Some(configuration) => match configuration {
+            Context::Configuration(configuration) => configuration,
+            _ => unreachable!(),
+        },
+        None => {
+            println!(
+                "{} Configuration was not passed by SFS!",
+                format_colors(&String::from("$BOLD$Fatal error:$NORMAL$")),
+            );
+            return;
+        }
+    };
+
+    let mut silent = configuration.decrypt_command.silent;
+    let mut overwrite = configuration.decrypt_command.overwrite;
+    let mut no_verify_chunks = configuration.decrypt_command.no_verify_chunks;
+    let mut force = false;
+    let mut input_paths = Vec::new();
+    for flag in command.flags {
+        if flag.name.is_some() {
+            match flag.name.unwrap().as_str() {
+                "silent" => silent = true,
+                "overwrite" => overwrite = true,
+                "no-verify-chunks" => no_verify_chunks = true,
+                "force" => force = true,
+                _ => (),
+            }
+        } else if flag.value.is_some() {
+            input_paths.push(flag.value.unwrap())
+        }
+    }
+
+    'input_loop: for input_path in input_paths {
+        let input_file = match fs::File::open(&input_path) {
+            Ok(file) => file,
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to open file:$NORMAL$")),
+                    error
+                );
+                continue;
+            }
+        };
+        let mut buffered_reader = BufReader::new(&input_file);
+
+        let mut metadata_buffer = String::new();
+        match buffered_reader.read_line(&mut metadata_buffer) {
+            Ok(_) => metadata_buffer = metadata_buffer.trim().to_string(),
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to read metadata:$NORMAL$")),
+                    error
+                );
+                continue;
+            }
+        }
+        let metadata_bytes = match fernet.decrypt(&metadata_buffer) {
+            Ok(metadata_bytes) => metadata_bytes,
+            Err(error) => {
+                println!(
+                    "{} {:?} (incorrect password?)",
+                    format_colors(&String::from("$BOLD$Unable to decrypt metadata:$NORMAL$")),
+                    error
+                );
+                continue;
+            }
+        };
+        let metadata = match FileMetadata::parse(&metadata_bytes) {
+            Ok(metadata) => metadata,
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to unpack metadata:$NORMAL$")),
+                    error
+                );
+                continue;
+            }
+        };
+
+        if !force {
+            if metadata.format_version != sfs::SFS_FORMAT_VERSION {
+                println!(
+                    "{}",
+                    format_colors(&String::from(
+                        "$BOLD$Ignoring file:$NORMAL$ File format version does not match"
+                    )),
+                );
+                continue;
+            }
+        }
+
+        let output_path = match input_path.to_string().strip_suffix(".sfs") {
+            Some(path) => path.to_string(),
+            None => input_path.to_string(),
+        };
+        if !overwrite {
+            if fs::metadata(&output_path).is_ok() {
+                let mut input = String::new();
+                loop {
+                    if input.to_lowercase().starts_with("n") {
+                        return;
+                    } else if input.to_lowercase().starts_with("y") {
+                        break;
+                    } else {
+                        print!(
+                        "{}",
+                        format_colors(&format!("$BOLD${}$NORMAL$ already exists. Do you want to overwrite it? $BOLD$Y/N:$NORMAL$ ", output_path))
+                    );
+                        std::io::stdout().flush().unwrap();
+                        input.clear();
+                        match std::io::stdin().read_line(&mut input) {
+                            Ok(_) => (),
+                            Err(error) => {
+                                println!(
+                                    "{} {:?}",
+                                    format_colors(&String::from(
+                                        "$BOLD$Unable to read input:$NORMAL$"
+                                    )),
+                                    error
+                                );
+                                std::process::exit(1)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        let mut output_file = match fs::File::create(output_path) {
+            Ok(file) => file,
+            Err(error) => {
+                println!(
+                    "{} {:?}",
+                    format_colors(&String::from("$BOLD$Unable to create file:$NORMAL$")),
+                    error
+                );
+                continue;
+            }
+        };
+
+        let mut line_buffer = String::new();
+        let hashing_algorithm = if no_verify_chunks {
+            HashingAlgorithm::None
+        } else {
+            HashingAlgorithm::from_u8(metadata.hashing_algorithm)
+        };
+        let mut decrypter = Decrypter::new(fernet.to_owned(), &hashing_algorithm);
+        let progress_bar = ProgressBar::new(metadata.total_bytes);
+        progress_bar.set_style(
+            ProgressStyle::with_template(configuration.encrypt_command.progress_bar.as_str())
+                .unwrap()
+                .with_key(
+                    "eta",
+                    |state: &ProgressState, w: &mut dyn std::fmt::Write| {
+                        write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
+                    },
+                )
+                .progress_chars("#>-"),
+        );
+
+        loop {
+            let read = match buffered_reader.read_line(&mut line_buffer) {
+                Ok(read) => read,
+                Err(error) => {
+                    println!(
+                        "{} {:?}",
+                        format_colors(&String::from("$BOLD$Unable to read chunk:$NORMAL$")),
+                        error
+                    );
+                    continue 'input_loop;
+                }
+            };
+            if read == 0 {
+                break;
+            }
+
+            let decrypted = match decrypter.decrypt(&line_buffer.trim()) {
+                Ok(decrypted) => decrypted,
+                Err(error) => {
+                    println!(
+                        "{} {:?} (incorrect password?)",
+                        format_colors(&String::from("$BOLD$Unable to decrypt chunk:$NORMAL$")),
+                        error
+                    );
+                    continue 'input_loop;
+                }
+            };
+            line_buffer.clear();
+            match output_file.write(&decrypted) {
+                Ok(_) => (),
+                Err(error) => {
+                    println!(
+                        "{} {:?}",
+                        format_colors(&String::from("$BOLD$Unable to write chunk:$NORMAL$")),
+                        error
+                    );
+                    continue 'input_loop;
+                }
+            }
+
+            if !silent {
+                progress_bar.set_position(decrypter.total_bytes)
+            }
+        }
+
+        if !no_verify_chunks {
+            let output_checksum = decrypter.get_checksum();
+            if output_checksum != metadata.checksum {
+                println!("{}", format_colors(&format!("$BOLD$$RED$WARNING - DECRYPTED FILE DOES NOT MATCH CHECKSUM! EXPECTED `{}` but GOT `{}`!", metadata.checksum, output_checksum)));
+            }
+        }
+    }
+}
 
 pub fn information_command(command: ParsedCommand) {
     let fernet = match command.contexts.get(&String::from("fernet")) {
