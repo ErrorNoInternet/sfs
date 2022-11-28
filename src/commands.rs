@@ -662,7 +662,7 @@ pub fn encrypt_command(command: ParsedCommand) {
             Err(error) => {
                 println!(
                     "{} {:?}",
-                    format_colors(&String::from("$BOLD$Unable to read file:$NORMAL$")),
+                    format_colors(&String::from("$BOLD$Unable to open file:$NORMAL$")),
                     error
                 );
                 continue;
@@ -746,7 +746,9 @@ pub fn encrypt_command(command: ParsedCommand) {
             Err(error) => {
                 println!(
                     "{} {:?}",
-                    format_colors(&String::from("$BOLD$Unable to write file:$NORMAL$")),
+                    format_colors(&String::from(
+                        "$BOLD$Unable to write metadata padding:$NORMAL$"
+                    )),
                     error
                 );
                 continue 'input_loop;
@@ -758,7 +760,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 Err(error) => {
                     println!(
                         "{} {:?}",
-                        format_colors(&String::from("$BOLD$Unable to read file:$NORMAL$")),
+                        format_colors(&String::from("$BOLD$Unable to read chunk:$NORMAL$")),
                         error
                     );
                     continue 'input_loop;
@@ -775,7 +777,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 Err(error) => {
                     println!(
                         "{} {:?}",
-                        format_colors(&String::from("$BOLD$Unable to write file:$NORMAL$")),
+                        format_colors(&String::from("$BOLD$Unable to write chunk:$NORMAL$")),
                         error
                     );
                     continue 'input_loop;
@@ -791,7 +793,7 @@ pub fn encrypt_command(command: ParsedCommand) {
             Err(error) => {
                 println!(
                     "{} {:?}",
-                    format_colors(&String::from("$BOLD$Unable to write file:$NORMAL$")),
+                    format_colors(&String::from("$BOLD$Unable to seek file:$NORMAL$")),
                     error
                 );
                 continue 'input_loop;
@@ -815,7 +817,7 @@ pub fn encrypt_command(command: ParsedCommand) {
             Err(error) => {
                 println!(
                     "{} {:?}",
-                    format_colors(&String::from("$BOLD$Unable to write file:$NORMAL$")),
+                    format_colors(&String::from("$BOLD$Unable to write metadata:$NORMAL$")),
                     error
                 );
                 continue 'input_loop;
@@ -854,7 +856,7 @@ pub fn information_command(command: ParsedCommand) {
             Err(error) => {
                 println!(
                     "{} {:?}",
-                    format_colors(&String::from("$BOLD$Unable to read file:$NORMAL$")),
+                    format_colors(&String::from("$BOLD$Unable to open file:$NORMAL$")),
                     error
                 );
                 continue;
@@ -866,7 +868,7 @@ pub fn information_command(command: ParsedCommand) {
             Err(error) => {
                 println!(
                     "{} {:?}",
-                    format_colors(&String::from("$BOLD$Unable to read file:$NORMAL$")),
+                    format_colors(&String::from("$BOLD$Unable to read metadata:$NORMAL$")),
                     error
                 );
                 continue;
@@ -878,7 +880,7 @@ pub fn information_command(command: ParsedCommand) {
             Err(error) => {
                 println!(
                     "{} {:?} (incorrect password?)",
-                    format_colors(&String::from("$BOLD$Unable to decrypt file:$NORMAL$")),
+                    format_colors(&String::from("$BOLD$Unable to decrypt metadata:$NORMAL$")),
                     error
                 );
                 continue;
