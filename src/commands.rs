@@ -987,6 +987,17 @@ pub fn decrypt_command(command: ParsedCommand) {
     }
 
     'input_loop: for input_path in input_paths {
+        if !input_path.ends_with(".sfs") {
+            println!(
+                "{}",
+                format_colors(&format!(
+                    "$BOLD$Ignoring {}:$NORMAL$ File does not end with .sfs",
+                    input_path
+                )),
+            );
+            continue;
+        }
+
         let input_file = match fs::File::open(&input_path) {
             Ok(file) => file,
             Err(error) => {
@@ -1039,8 +1050,9 @@ pub fn decrypt_command(command: ParsedCommand) {
             if metadata.format_version != sfs::SFS_FORMAT_VERSION {
                 println!(
                     "{}",
-                    format_colors(&String::from(
-                        "$BOLD$Ignoring file:$NORMAL$ File format version does not match"
+                    format_colors(&format!(
+                        "$BOLD$Ignoring {}:$NORMAL$ File format version does not match",
+                        input_path
                     )),
                 );
                 continue;
