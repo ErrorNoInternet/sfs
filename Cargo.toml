@@ -18,8 +18,8 @@ sha2 = "0.10.6"
 structure = "0.1.2"
 termsize = "0.1.6"
 toml = "0.5.9"
+walkdir = "2.3.2"
 
 [dependencies.xxhash-rust]
 version = "0.8.6"
 features = ["xxh3"]
-
