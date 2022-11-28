@@ -205,6 +205,12 @@ pub fn get_commands() -> Vec<Command> {
         },
         flags: &[
             Flag {
+                name: "recursive",
+                short_name: "r",
+                description: "Recursively encrypt all files",
+                has_value: false,
+            },
+            Flag {
                 name: "silent",
                 short_name: "s",
                 description: "Do not display a progress bar",
@@ -240,6 +246,12 @@ pub fn get_commands() -> Vec<Command> {
             arguments: &["[FILE]..."],
         },
         flags: &[
+            Flag {
+                name: "recursive",
+                short_name: "r",
+                description: "Recursively decrypt all files",
+                has_value: false,
+            },
             Flag {
                 name: "silent",
                 short_name: "s",
