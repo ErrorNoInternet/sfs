@@ -258,6 +258,12 @@ pub fn get_commands() -> Vec<Command> {
                 description: "Don't verify that the chunks match the checksum",
                 has_value: false,
             },
+            Flag {
+                name: "force",
+                short_name: "f",
+                description: "Decrypt the file even if the file format version doesn't match",
+                has_value: false,
+            },
         ],
         aliases: &[],
         callback: decrypt_command,
