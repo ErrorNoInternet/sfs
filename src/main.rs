@@ -40,8 +40,10 @@ impl Configuration {
                 folder_format: String::from("$BLUE$"),
             },
             encrypt_command: EncryptCommandConfiguration {
+                recursive: false,
                 silent: false,
                 overwrite: false,
+                keep: false,
                 hashing_algorithm: String::from("xxh3"),
                 chunk_size: 1000000,
                 progress_bar_format: String::from(
@@ -49,8 +51,10 @@ impl Configuration {
                 ),
             },
             decrypt_command: DecryptCommandConfiguration {
+                recursive: false,
                 silent: false,
                 overwrite: false,
+                keep: false,
                 no_verify_chunks: false,
                 progress_bar_format: String::from(
                     "$BOLD$$sfs::file.name$:$NORMAL$ [{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",

@@ -62,8 +62,10 @@ pub struct LsCommandConfiguration {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptCommandConfiguration {
+    pub recursive: bool,
     pub silent: bool,
     pub overwrite: bool,
+    pub keep: bool,
     pub hashing_algorithm: String,
     pub chunk_size: u64,
     pub progress_bar_format: String,
@@ -71,8 +73,10 @@ pub struct EncryptCommandConfiguration {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecryptCommandConfiguration {
+    pub recursive: bool,
     pub silent: bool,
     pub overwrite: bool,
+    pub keep: bool,
     pub no_verify_chunks: bool,
     pub progress_bar_format: String,
 }
@@ -224,6 +228,12 @@ pub fn get_commands() -> Vec<Command> {
                 has_value: false,
             },
             Flag {
+                name: "keep",
+                short_name: "k",
+                description: "Keep the original file after encrypting",
+                has_value: false,
+            },
+            Flag {
                 name: "hashing-algorithm",
                 short_name: "h",
                 description: "Which hashing algorithm to use (none/xxh3)",
@@ -263,6 +273,12 @@ pub fn get_commands() -> Vec<Command> {
                 name: "overwrite",
                 short_name: "o",
                 description: "Overwrite the output file even if it exists",
+                has_value: false,
+            },
+            Flag {
+                name: "keep",
+                short_name: "k",
+                description: "Keep the encrypted file after decrypting",
                 has_value: false,
             },
             Flag {
@@ -648,9 +664,10 @@ pub fn encrypt_command(command: ParsedCommand) {
         }
     };
 
-    let mut recursive = false;
+    let mut recursive = configuration.encrypt_command.recursive;
     let mut silent = configuration.encrypt_command.silent;
     let mut overwrite = configuration.encrypt_command.overwrite;
+    let mut keep = configuration.encrypt_command.keep;
     let mut input_hashing_algorithm = configuration.encrypt_command.hashing_algorithm.clone();
     let mut chunk_size = configuration.encrypt_command.chunk_size;
     let mut raw_input_paths = Vec::new();
@@ -660,6 +677,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 "recursive" => recursive = true,
                 "silent" => silent = true,
                 "overwrite" => overwrite = true,
+                "keep" => keep = true,
                 "hashing-algorithm" => input_hashing_algorithm = flag.value.unwrap().to_owned(),
                 "chunk-size" => chunk_size = flag.value.unwrap().parse().unwrap_or(chunk_size),
                 _ => (),
@@ -875,6 +893,20 @@ pub fn encrypt_command(command: ParsedCommand) {
                 continue 'input_loop;
             }
         }
+
+        if !keep {
+            match fs::remove_file(input_path) {
+                Ok(_) => (),
+                Err(error) => {
+                    println!(
+                        "{} {:?}",
+                        format_colors(&String::from("$BOLD$Unable to remove file:$NORMAL$")),
+                        error
+                    );
+                    continue 'input_loop;
+                }
+            }
+        }
     }
 }
 
@@ -906,9 +938,10 @@ pub fn decrypt_command(command: ParsedCommand) {
         }
     };
 
-    let mut recursive = false;
+    let mut recursive = configuration.decrypt_command.recursive;
     let mut silent = configuration.decrypt_command.silent;
     let mut overwrite = configuration.decrypt_command.overwrite;
+    let mut keep = configuration.decrypt_command.keep;
     let mut no_verify_chunks = configuration.decrypt_command.no_verify_chunks;
     let mut force = false;
     let mut raw_input_paths = Vec::new();
@@ -918,6 +951,7 @@ pub fn decrypt_command(command: ParsedCommand) {
                 "recursive" => recursive = true,
                 "silent" => silent = true,
                 "overwrite" => overwrite = true,
+                "keep" => keep = true,
                 "no-verify-chunks" => no_verify_chunks = true,
                 "force" => force = true,
                 _ => (),
@@ -1136,6 +1170,20 @@ pub fn decrypt_command(command: ParsedCommand) {
             let output_checksum = decrypter.get_checksum();
             if output_checksum != metadata.checksum {
                 println!("{}", format_colors(&format!("$BOLD$$RED$WARNING - DECRYPTED FILE DOES NOT MATCH CHECKSUM! EXPECTED `{}` but GOT `{}`!", metadata.checksum, output_checksum)));
+            }
+        }
+
+        if !keep {
+            match fs::remove_file(input_path) {
+                Ok(_) => (),
+                Err(error) => {
+                    println!(
+                        "{} {:?}",
+                        format_colors(&String::from("$BOLD$Unable to remove file:$NORMAL$")),
+                        error
+                    );
+                    continue 'input_loop;
+                }
             }
         }
     }
