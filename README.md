@@ -1,5 +1,5 @@
 # SFS (SecureFS)
-<img src="./showcase.svg" width="69%" height="69%"/>
+<img src="./showcase.svg" width="90%" height="90%"/>
 
 A shell that allows you to encrypt/decrypt your files with a password
 
