@@ -72,24 +72,28 @@ pub fn generate_fernet(password: &String) -> fernet::Fernet {
 pub fn tokenize(command: &String) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current_token = String::new();
-    let mut in_string = false;
+    let mut in_string = (false, "");
     for letter in command.chars() {
-        if letter == ' ' && !in_string {
+        if letter == '\\' {
+            in_string = (true, "\\");
+            continue;
+        }
+        if letter == ' ' && !in_string.0 {
             if current_token.len() > 0 {
                 tokens.push(current_token);
                 current_token = String::new();
             }
             continue;
         }
-        if letter == '"' && !in_string {
-            in_string = true;
+        if letter == '"' && !in_string.0 {
+            in_string = (true, "\"");
             if current_token.len() > 0 {
                 tokens.push(current_token);
                 current_token = String::new();
             }
             continue;
-        } else if letter == '"' && in_string {
-            in_string = false;
+        } else if letter == '"' && in_string.0 {
+            in_string = (false, "");
             if current_token.len() > 0 {
                 tokens.push(current_token);
                 current_token = String::new();
@@ -97,6 +101,9 @@ pub fn tokenize(command: &String) -> Vec<String> {
             continue;
         }
         current_token.push(letter);
+        if in_string == (true, "\\") {
+            in_string = (false, "");
+        }
     }
     if current_token.len() > 0 {
         tokens.push(current_token);
