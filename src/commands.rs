@@ -6,6 +6,7 @@ use sfs::{Decrypter, Encrypter, FileMetadata, HashingAlgorithm};
 use std::collections::HashMap;
 use std::fs;
 use std::io::{BufRead, BufReader, Read, Seek, Write};
+use walkdir::WalkDir;
 
 #[derive(Clone)]
 pub enum Context {
@@ -647,14 +648,16 @@ pub fn encrypt_command(command: ParsedCommand) {
         }
     };
 
+    let mut recursive = false;
     let mut silent = configuration.encrypt_command.silent;
     let mut overwrite = configuration.encrypt_command.overwrite;
     let mut input_hashing_algorithm = configuration.encrypt_command.hashing_algorithm.clone();
     let mut chunk_size = configuration.encrypt_command.chunk_size;
-    let mut input_paths = Vec::new();
+    let mut raw_input_paths = Vec::new();
     for flag in command.flags {
         if flag.name.is_some() {
             match flag.name.unwrap().as_str() {
+                "recursive" => recursive = true,
                 "silent" => silent = true,
                 "overwrite" => overwrite = true,
                 "hashing-algorithm" => input_hashing_algorithm = flag.value.unwrap().to_owned(),
@@ -662,8 +665,33 @@ pub fn encrypt_command(command: ParsedCommand) {
                 _ => (),
             }
         } else if flag.value.is_some() {
-            input_paths.push(flag.value.unwrap())
+            raw_input_paths.push(flag.value.unwrap())
         }
+    }
+    let mut input_paths = Vec::new();
+    if recursive {
+        for input_path in &raw_input_paths {
+            for entry in WalkDir::new(&input_path) {
+                let path = match entry {
+                    Ok(entry) => entry.path().to_owned(),
+                    Err(error) => {
+                        println!(
+                            "{} {:?}",
+                            format_colors(&String::from(
+                                "$BOLD$Unable to get file information:$NORMAL$"
+                            )),
+                            error
+                        );
+                        continue;
+                    }
+                };
+                if path.is_file() {
+                    input_paths.push(path.display().to_string());
+                }
+            }
+        }
+    } else {
+        input_paths = raw_input_paths
     }
     let hashing_algorithm = match input_hashing_algorithm.to_lowercase().as_str() {
         "none" => HashingAlgorithm::None,
@@ -746,18 +774,22 @@ pub fn encrypt_command(command: ParsedCommand) {
             }
         };
         let progress_bar = ProgressBar::new(file_size);
+        let progress_bar_format = format_colors(
+            &configuration
+                .encrypt_command
+                .progress_bar_format
+                .replace("$sfs::file.name$", &input_path),
+        );
         progress_bar.set_style(
-            ProgressStyle::with_template(
-                &configuration.encrypt_command.progress_bar_format.as_str(),
-            )
-            .unwrap()
-            .with_key(
-                "eta",
-                |state: &ProgressState, w: &mut dyn std::fmt::Write| {
-                    write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
-                },
-            )
-            .progress_chars("#>-"),
+            ProgressStyle::with_template(&progress_bar_format)
+                .unwrap()
+                .with_key(
+                    "eta",
+                    |state: &ProgressState, w: &mut dyn std::fmt::Write| {
+                        write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
+                    },
+                )
+                .progress_chars("#>-"),
         );
 
         let encrypted_size = determine_encrypted_size(FileMetadata::default().pack().len());
@@ -1010,18 +1042,22 @@ pub fn decrypt_command(command: ParsedCommand) {
         };
         let mut decrypter = Decrypter::new(fernet.to_owned(), &hashing_algorithm);
         let progress_bar = ProgressBar::new(metadata.total_bytes);
+        let progress_bar_format = format_colors(
+            &configuration
+                .encrypt_command
+                .progress_bar_format
+                .replace("$sfs::file.name$", &input_path),
+        );
         progress_bar.set_style(
-            ProgressStyle::with_template(
-                &configuration.encrypt_command.progress_bar_format.as_str(),
-            )
-            .unwrap()
-            .with_key(
-                "eta",
-                |state: &ProgressState, w: &mut dyn std::fmt::Write| {
-                    write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
-                },
-            )
-            .progress_chars("#>-"),
+            ProgressStyle::with_template(&progress_bar_format)
+                .unwrap()
+                .with_key(
+                    "eta",
+                    |state: &ProgressState, w: &mut dyn std::fmt::Write| {
+                        write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
+                    },
+                )
+                .progress_chars("#>-"),
         );
 
         loop {

@@ -45,7 +45,7 @@ impl Configuration {
                 hashing_algorithm: String::from("xxh3"),
                 chunk_size: 1000000,
                 progress_bar_format: String::from(
-                    "[{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
+                    "$BOLD$$sfs::file.name$:$NORMAL$ [{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
                 ),
             },
             decrypt_command: DecryptCommandConfiguration {
@@ -53,7 +53,7 @@ impl Configuration {
                 overwrite: false,
                 no_verify_chunks: false,
                 progress_bar_format: String::from(
-                    "[{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
+                    "$BOLD$$sfs::file.name$:$NORMAL$ [{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
                 ),
             },
         }
