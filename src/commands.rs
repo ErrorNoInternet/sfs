@@ -719,9 +719,9 @@ pub fn encrypt_command(command: ParsedCommand) {
                 continue;
             }
         };
-        let mut buffer = vec![0; chunk_size as usize];
-        let mut encrypter = Encrypter::new(&hashing_algorithm);
 
+        let mut encrypter = Encrypter::new(fernet.to_owned(), &hashing_algorithm);
+        let mut buffer = vec![0; chunk_size as usize];
         let file_size = match input_file.metadata() {
             Ok(metadata) => metadata.len(),
             Err(error) => {
@@ -777,7 +777,7 @@ pub fn encrypt_command(command: ParsedCommand) {
             }
 
             let mut encrypted = "\n".as_bytes().to_vec();
-            encrypted.append(&mut encrypter.encrypt(&fernet, &buffer[..read]).into_bytes());
+            encrypted.append(&mut encrypter.encrypt(&buffer[..read]).into_bytes());
             match output_file.write(&encrypted) {
                 Ok(_) => (),
                 Err(error) => {
@@ -868,6 +868,7 @@ pub fn information_command(command: ParsedCommand) {
                 continue;
             }
         };
+
         let mut buffer = String::new();
         match BufReader::new(&input_file).read_line(&mut buffer) {
             Ok(_) => buffer = buffer.trim().to_string(),
@@ -880,7 +881,6 @@ pub fn information_command(command: ParsedCommand) {
                 continue;
             }
         }
-
         let metadata_bytes = match fernet.decrypt(&buffer) {
             Ok(metadata_bytes) => metadata_bytes,
             Err(error) => {
