@@ -97,7 +97,7 @@ pub fn get_commands() -> Vec<Command> {
     commands.push(Command {
         name: "version",
         metadata: CommandMetadata {
-            description: "Get the current SFS version",
+            description: "Display the current SFS and file format version",
             arguments: &[],
         },
         flags: &[],
@@ -108,7 +108,7 @@ pub fn get_commands() -> Vec<Command> {
     commands.push(Command {
         name: "quit",
         metadata: CommandMetadata {
-            description: "Quit SFS",
+            description: "Save everything and quit SFS",
             arguments: &[],
         },
         flags: &[],
@@ -130,7 +130,7 @@ pub fn get_commands() -> Vec<Command> {
     commands.push(Command {
         name: "ls",
         metadata: CommandMetadata {
-            description: "List all the files in the current (or specified) directory",
+            description: "List all the files in a specified directory",
             arguments: &["(DIRECTORY)..."],
         },
         flags: &[
@@ -160,7 +160,7 @@ pub fn get_commands() -> Vec<Command> {
     commands.push(Command {
         name: "rm",
         metadata: CommandMetadata {
-            description: "Remove a file permanently",
+            description: "Permanently remove a file",
             arguments: &["[FILE]..."],
         },
         flags: &[],
@@ -193,7 +193,7 @@ pub fn get_commands() -> Vec<Command> {
     commands.push(Command {
         name: "clear",
         metadata: CommandMetadata {
-            description: "Clear the terminal",
+            description: "Clear the terminal screen",
             arguments: &[],
         },
         flags: &[],
@@ -204,7 +204,7 @@ pub fn get_commands() -> Vec<Command> {
     commands.push(Command {
         name: "encrypt",
         metadata: CommandMetadata {
-            description: "Encrypt file(s) with your password",
+            description: "Encrypt the specified file(s) with your password",
             arguments: &["[FILE]..."],
         },
         flags: &[
@@ -252,7 +252,7 @@ pub fn get_commands() -> Vec<Command> {
     commands.push(Command {
         name: "decrypt",
         metadata: CommandMetadata {
-            description: "Decrypt file(s) with your password",
+            description: "Decrypt the specified file(s) with your password",
             arguments: &["[FILE]..."],
         },
         flags: &[
