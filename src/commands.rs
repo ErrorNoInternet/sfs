@@ -567,7 +567,7 @@ pub fn remove_command(command: ParsedCommand) {
     }
 
     for input_path in input_paths {
-        match fs::remove_file(input_path) {
+        match fs::remove_file(&input_path) {
             Ok(_) => (),
             Err(error) => {
                 println!(
@@ -776,7 +776,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 }
             }
         }
-        let mut output_file = match fs::File::create(output_path) {
+        let mut output_file = match fs::File::create(&output_path) {
             Ok(file) => file,
             Err(error) => {
                 println!(
@@ -924,7 +924,7 @@ pub fn encrypt_command(command: ParsedCommand) {
         }
 
         if !keep {
-            match fs::remove_file(input_path) {
+            match fs::remove_file(&input_path) {
                 Ok(_) => (),
                 Err(error) => {
                     println!(
@@ -1140,7 +1140,7 @@ pub fn decrypt_command(command: ParsedCommand) {
                 }
             }
         }
-        let mut output_file = match fs::File::create(output_path) {
+        let mut output_file = match fs::File::create(&output_path) {
             Ok(file) => file,
             Err(error) => {
                 println!(
@@ -1243,7 +1243,7 @@ pub fn decrypt_command(command: ParsedCommand) {
         }
 
         if !keep {
-            match fs::remove_file(input_path) {
+            match fs::remove_file(&input_path) {
                 Ok(_) => (),
                 Err(error) => {
                     println!(
