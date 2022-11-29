@@ -137,19 +137,19 @@ pub fn get_commands() -> Vec<Command> {
             Flag {
                 name: "all",
                 short_name: "a",
-                description: "List hidden files as well",
+                description: "List hidden files (dot files) as well",
                 has_value: false,
             },
             Flag {
                 name: "list",
                 short_name: "l",
-                description: "List one file for each line (list view)",
+                description: "Display one file on a line (list view)",
                 has_value: false,
             },
             Flag {
                 name: "columns",
                 short_name: "c",
-                description: "The amount of columns to print (for grid view)",
+                description: "The amount of columns to print for grid view",
                 has_value: true,
             },
         ],
@@ -217,7 +217,7 @@ pub fn get_commands() -> Vec<Command> {
             Flag {
                 name: "silent",
                 short_name: "s",
-                description: "Do not display a progress bar",
+                description: "Do not display a progress bar or any warnings",
                 has_value: false,
             },
             Flag {
@@ -241,7 +241,7 @@ pub fn get_commands() -> Vec<Command> {
             Flag {
                 name: "chunk-size",
                 short_name: "c",
-                description: "The size of the encrypted chunks",
+                description: "The chunk size to encrypt data in",
                 has_value: true,
             },
         ],
@@ -265,7 +265,7 @@ pub fn get_commands() -> Vec<Command> {
             Flag {
                 name: "silent",
                 short_name: "s",
-                description: "Do not display a progress bar",
+                description: "Do not display a progress bar or any warnings",
                 has_value: false,
             },
             Flag {
