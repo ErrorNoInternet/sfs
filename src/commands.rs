@@ -84,6 +84,17 @@ pub struct DecryptCommandConfiguration {
 pub fn get_commands() -> Vec<Command> {
     let mut commands = Vec::new();
     commands.push(Command {
+        name: "help",
+        metadata: CommandMetadata {
+            description: "Get help for a specified command (or list all)",
+            arguments: &["(COMMAND)..."],
+        },
+        flags: &[],
+        aliases: &["h", "?"],
+        callback: help_command,
+        contexts: &[],
+    });
+    commands.push(Command {
         name: "version",
         metadata: CommandMetadata {
             description: "Get the current SFS version",
@@ -92,17 +103,6 @@ pub fn get_commands() -> Vec<Command> {
         flags: &[],
         aliases: &["ver", "about"],
         callback: version_command,
-        contexts: &[],
-    });
-    commands.push(Command {
-        name: "help",
-        metadata: CommandMetadata {
-            description: "Get help for a command, or list all commands if none specified",
-            arguments: &["(COMMAND)..."],
-        },
-        flags: &[],
-        aliases: &["h", "?"],
-        callback: help_command,
         contexts: &[],
     });
     commands.push(Command {
@@ -130,8 +130,7 @@ pub fn get_commands() -> Vec<Command> {
     commands.push(Command {
         name: "ls",
         metadata: CommandMetadata {
-            description:
-                "List all the files and folder in the specified directory (defaults to grid view)",
+            description: "List all the files in the current (or specified) directory",
             arguments: &["(DIRECTORY)..."],
         },
         flags: &[
@@ -161,7 +160,7 @@ pub fn get_commands() -> Vec<Command> {
     commands.push(Command {
         name: "rm",
         metadata: CommandMetadata {
-            description: "Remove a file",
+            description: "Remove a file permanently",
             arguments: &["[FILE]..."],
         },
         flags: &[],
@@ -312,15 +311,6 @@ pub fn get_commands() -> Vec<Command> {
     commands
 }
 
-pub fn version_command(_command: ParsedCommand) {
-    println!(
-        "{} v{} (file format v{})",
-        format_colors(&String::from("$BOLD$SFS$NORMAL$")),
-        sfs::SFS_VERSION_STRING,
-        sfs::SFS_FORMAT_VERSION,
-    )
-}
-
 pub fn help_command(command: ParsedCommand) {
     if command.flags.len() > 0 {
         for flag in command.flags {
@@ -411,6 +401,15 @@ pub fn help_command(command: ParsedCommand) {
             )
         }
     }
+}
+
+pub fn version_command(_command: ParsedCommand) {
+    println!(
+        "{} v{} (file format v{})",
+        format_colors(&String::from("$BOLD$SFS$NORMAL$")),
+        sfs::SFS_VERSION_STRING,
+        sfs::SFS_FORMAT_VERSION,
+    )
 }
 
 pub fn quit_command(_: ParsedCommand) {
