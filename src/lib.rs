@@ -62,7 +62,7 @@ impl FileMetadata {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum HashingAlgorithm {
     None = 0,
     Xxh3 = 1,
@@ -122,7 +122,7 @@ pub struct Encrypter<'a> {
     pub total_bytes: u64,
 }
 impl<'a> Encrypter<'a> {
-    pub fn new(fernet: fernet::Fernet, hashing_algorithm: &HashingAlgorithm) -> Encrypter<'a> {
+    pub fn new(fernet: fernet::Fernet, hashing_algorithm: HashingAlgorithm) -> Encrypter<'a> {
         let hasher: Box<dyn Hasher> = match hashing_algorithm {
             HashingAlgorithm::None => Box::new(DummyHasher {}),
             HashingAlgorithm::Xxh3 => Box::new(Xxh3Hasher {
@@ -153,7 +153,7 @@ pub struct Decrypter<'a> {
     pub total_bytes: u64,
 }
 impl<'a> Decrypter<'a> {
-    pub fn new(fernet: fernet::Fernet, hashing_algorithm: &HashingAlgorithm) -> Decrypter<'a> {
+    pub fn new(fernet: fernet::Fernet, hashing_algorithm: HashingAlgorithm) -> Decrypter<'a> {
         let hasher: Box<dyn Hasher> = match hashing_algorithm {
             HashingAlgorithm::None => Box::new(DummyHasher {}),
             HashingAlgorithm::Xxh3 => Box::new(Xxh3Hasher {

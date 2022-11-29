@@ -791,7 +791,7 @@ pub fn encrypt_command(command: ParsedCommand) {
             }
         };
 
-        let mut encrypter = Encrypter::new(fernet.to_owned(), &hashing_algorithm);
+        let mut encrypter = Encrypter::new(fernet.to_owned(), hashing_algorithm);
         let mut buffer = vec![0; chunk_size as usize];
         let file_size = match input_file.metadata() {
             Ok(metadata) => metadata.len(),
@@ -1165,7 +1165,7 @@ pub fn decrypt_command(command: ParsedCommand) {
         } else {
             HashingAlgorithm::from_u8(metadata.hashing_algorithm)
         };
-        let mut decrypter = Decrypter::new(fernet.to_owned(), &hashing_algorithm);
+        let mut decrypter = Decrypter::new(fernet.to_owned(), hashing_algorithm);
         let progress_bar = ProgressBar::new(metadata.total_bytes);
         let progress_bar_format = format_colors(
             &configuration
