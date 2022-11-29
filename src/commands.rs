@@ -1021,13 +1021,15 @@ pub fn decrypt_command(command: ParsedCommand) {
 
     'input_loop: for input_path in input_paths {
         if !input_path.ends_with(".sfs") {
-            println!(
-                "{}",
-                format_colors(&format!(
-                    "$BOLD$[{}] Ignoring file:$NORMAL$ File does not end with .sfs",
-                    input_path
-                )),
-            );
+            if !silent {
+                println!(
+                    "{}",
+                    format_colors(&format!(
+                        "$BOLD$[{}] Warning - Ignoring file:$NORMAL$ File does not end with .sfs",
+                        input_path
+                    )),
+                );
+            }
             continue;
         }
 
@@ -1093,13 +1095,15 @@ pub fn decrypt_command(command: ParsedCommand) {
 
         if !force {
             if metadata.format_version != sfs::SFS_FORMAT_VERSION {
-                println!(
-                    "{}",
-                    format_colors(&format!(
-                        "$BOLD$[{}] Ignoring file:$NORMAL$ File format version does not match",
-                        input_path
-                    )),
-                );
+                if !silent {
+                    println!(
+                        "{}",
+                        format_colors(&format!(
+                            "$BOLD$[{}] Ignoring file:$NORMAL$ File format version does not match",
+                            input_path
+                        )),
+                    );
+                }
                 continue;
             }
         }
