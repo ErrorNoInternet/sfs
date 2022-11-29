@@ -66,7 +66,8 @@ pub fn generate_fernet(password: &String) -> fernet::Fernet {
             key.push(letter);
         }
     }
-    fernet::Fernet::new(&base64::encode(key)).unwrap()
+
+    fernet::Fernet::new(&base64::encode_config(key, base64::URL_SAFE)).unwrap()
 }
 
 pub fn tokenize(command: &String) -> Vec<String> {
