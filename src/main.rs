@@ -150,7 +150,7 @@ fn main() {
     };
 
     if configuration_string.is_empty() {
-        println!("{}", format_colors(&format!("$BOLD$Welcome to $BLUE$SFS$NORMAL$$BOLD$ shell! This message will only appear once.\n$BOLD$Please enter a password. This password is used to encrypt/decrypt your files, and you must re-enter it every time you launch SFS.$NORMAL$")));
+        println!("{}", format_colors(&format!("$BOLD$Welcome to the $BLUE$SFS$NORMAL$$BOLD$ shell! This message will only appear once.\n$BOLD$Please enter a password. This password is used to encrypt/decrypt your files, and you must re-enter it every time you launch SFS.$NORMAL$")));
     }
     print!("Password: ");
     std::io::stdout().flush().unwrap();
