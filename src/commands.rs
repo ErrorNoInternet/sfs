@@ -1350,7 +1350,7 @@ pub fn information_command(command: ParsedCommand) {
         println!(
             "{}",
             format_colors(&format!(
-                "$BOLD$`{}`$NORMAL$:\n\t$BOLD$SFS Format Version:$NORMAL$ {}\n\t$BOLD$Decrypted Size:$NORMAL$ {} ({})\n\t$BOLD$Hashing Algorithm:$NORMAL$ {}\n\t$BOLD$Checksum:$NORMAL$ {:X}\n\t$BOLD$Chunk Size:$NORMAL$ {} ({})",
+                "$BOLD$`{}`$NORMAL$:\n\t$BOLD$SFS File Format Version:$NORMAL$ {}\n\t$BOLD$Decrypted Size:$NORMAL$ {} ({})\n\t$BOLD$Hashing Algorithm:$NORMAL$ {}\n\t$BOLD$Checksum:$NORMAL$ {:X}\n\t$BOLD$Chunk Size:$NORMAL$ {} ({})",
                 input_path,
                 metadata.format_version,
                 metadata.total_bytes,
