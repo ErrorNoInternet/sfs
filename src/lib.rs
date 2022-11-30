@@ -4,7 +4,7 @@ use xxhash_rust::xxh3::Xxh3;
 extern crate structure;
 
 pub const SFS_FORMAT_VERSION: u8 = 1;
-pub const SFS_VERSION_STRING: &str = "1.0.0";
+pub const SFS_VERSION_STRING: &str = "1.0.1";
 
 #[derive(Debug, Default, Clone)]
 pub struct FileMetadata {
