@@ -1,9 +1,11 @@
 use std::fmt;
 use xxhash_rust::xxh3::Xxh3;
+use xxhash_rust::xxh32::Xxh32;
+use xxhash_rust::xxh64::Xxh64;
 #[macro_use]
 extern crate structure;
 
-pub const SFS_FORMAT_VERSION: u8 = 1;
+pub const SFS_FORMAT_VERSION: u8 = 2;
 pub const SFS_VERSION_STRING: &str = "1.0.1";
 
 #[derive(Debug, Default, Clone)]
@@ -51,6 +53,21 @@ impl FileMetadata {
                     chunk_size: metadata.4,
                 })
             }
+            2 => {
+                let metadata_structure = structure!("BBQQQ");
+                let metadata =
+                    match metadata_structure.unpack(&metadata_bytes[..metadata_structure.size()]) {
+                        Ok(metadata) => metadata,
+                        Err(error) => return Err(error.to_string()),
+                    };
+                Ok(FileMetadata {
+                    format_version: metadata.0,
+                    hashing_algorithm: metadata.1,
+                    checksum: metadata.2,
+                    total_bytes: metadata.3,
+                    chunk_size: metadata.4,
+                })
+            }
             _ => Ok(FileMetadata {
                 format_version: version_metadata.0,
                 hashing_algorithm: 0,
@@ -66,12 +83,16 @@ impl FileMetadata {
 pub enum HashingAlgorithm {
     None = 0,
     Xxh3 = 1,
+    Xxh64 = 2,
+    Xxh32 = 3,
 }
 impl HashingAlgorithm {
     pub fn from_u8(value: u8) -> HashingAlgorithm {
         match value {
             0 => HashingAlgorithm::None,
             1 => HashingAlgorithm::Xxh3,
+            2 => HashingAlgorithm::Xxh64,
+            3 => HashingAlgorithm::Xxh32,
             _ => HashingAlgorithm::None,
         }
     }
@@ -116,6 +137,55 @@ impl Hasher for Xxh3Hasher {
     }
 }
 
+pub struct Xxh64Hasher {
+    pub hasher: Xxh64,
+}
+impl Hasher for Xxh64Hasher {
+    fn update(&mut self, data: &[u8]) {
+        self.hasher.update(data);
+    }
+
+    fn digest(&mut self) -> u64 {
+        self.hasher.digest()
+    }
+
+    fn reset(&mut self) {
+        self.hasher.reset(0)
+    }
+}
+
+pub struct Xxh32Hasher {
+    pub hasher: Xxh32,
+}
+impl Hasher for Xxh32Hasher {
+    fn update(&mut self, data: &[u8]) {
+        self.hasher.update(data);
+    }
+
+    fn digest(&mut self) -> u64 {
+        self.hasher.digest().into()
+    }
+
+    fn reset(&mut self) {
+        self.hasher.reset(0)
+    }
+}
+
+fn get_hasher(hashing_algorithm: HashingAlgorithm) -> Box<dyn Hasher> {
+    match hashing_algorithm {
+        HashingAlgorithm::None => Box::new(DummyHasher {}),
+        HashingAlgorithm::Xxh3 => Box::new(Xxh3Hasher {
+            hasher: Xxh3::new(),
+        }),
+        HashingAlgorithm::Xxh64 => Box::new(Xxh64Hasher {
+            hasher: Xxh64::new(0),
+        }),
+        HashingAlgorithm::Xxh32 => Box::new(Xxh32Hasher {
+            hasher: Xxh32::new(0),
+        }),
+    }
+}
+
 pub struct Encrypter<'a> {
     pub fernet: fernet::Fernet,
     pub hasher: Box<dyn Hasher + 'a>,
@@ -123,15 +193,9 @@ pub struct Encrypter<'a> {
 }
 impl<'a> Encrypter<'a> {
     pub fn new(fernet: fernet::Fernet, hashing_algorithm: HashingAlgorithm) -> Encrypter<'a> {
-        let hasher: Box<dyn Hasher> = match hashing_algorithm {
-            HashingAlgorithm::None => Box::new(DummyHasher {}),
-            HashingAlgorithm::Xxh3 => Box::new(Xxh3Hasher {
-                hasher: Xxh3::new(),
-            }),
-        };
         Encrypter {
             fernet,
-            hasher,
+            hasher: get_hasher(hashing_algorithm),
             total_bytes: 0,
         }
     }
@@ -154,15 +218,9 @@ pub struct Decrypter<'a> {
 }
 impl<'a> Decrypter<'a> {
     pub fn new(fernet: fernet::Fernet, hashing_algorithm: HashingAlgorithm) -> Decrypter<'a> {
-        let hasher: Box<dyn Hasher> = match hashing_algorithm {
-            HashingAlgorithm::None => Box::new(DummyHasher {}),
-            HashingAlgorithm::Xxh3 => Box::new(Xxh3Hasher {
-                hasher: Xxh3::new(),
-            }),
-        };
         Decrypter {
             fernet,
-            hasher,
+            hasher: get_hasher(hashing_algorithm),
             total_bytes: 0,
         }
     }

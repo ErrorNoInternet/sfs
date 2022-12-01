@@ -235,7 +235,7 @@ pub fn get_commands() -> Vec<Command> {
             Flag {
                 name: "hashing-algorithm",
                 short_name: "h",
-                description: "Which hashing algorithm to use (none/xxh3)",
+                description: "Which hashing algorithm to use (none/xxh3/xxh64/xxh32)",
                 has_value: true,
             },
             Flag {
@@ -721,6 +721,8 @@ pub fn encrypt_command(command: ParsedCommand) {
     let hashing_algorithm = match input_hashing_algorithm.to_lowercase().as_str() {
         "none" => HashingAlgorithm::None,
         "xxh3" => HashingAlgorithm::Xxh3,
+        "xxh64" => HashingAlgorithm::Xxh64,
+        "xxh32" => HashingAlgorithm::Xxh32,
         _ => {
             println!("Unknown hashing algorithm, defaulting to none");
             HashingAlgorithm::None

@@ -22,4 +22,4 @@ walkdir = "2.3.2"
 
 [dependencies.xxhash-rust]
 version = "0.8.6"
-features = ["xxh3"]
+features = ["xxh3", "xxh64", "xxh32"]
