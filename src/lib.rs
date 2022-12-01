@@ -99,7 +99,7 @@ impl HashingAlgorithm {
 }
 impl fmt::Display for HashingAlgorithm {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        write!(formatter, "{:?}", self)
+        write!(formatter, "{}", format!("{:?}", self).to_uppercase())
     }
 }
 

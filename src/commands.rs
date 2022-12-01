@@ -235,7 +235,7 @@ pub fn get_commands() -> Vec<Command> {
             Flag {
                 name: "hashing-algorithm",
                 short_name: "h",
-                description: "Which hashing algorithm to use (none/xxh3/xxh64/xxh32)",
+                description: "Which hashing algorithm to use (None/XXH3/XXH64/XXH32)",
                 has_value: true,
             },
             Flag {
