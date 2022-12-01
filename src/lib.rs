@@ -86,20 +86,28 @@ pub enum HashingAlgorithm {
     Xxh64 = 2,
     Xxh32 = 3,
 }
-impl HashingAlgorithm {
-    pub fn from_u8(value: u8) -> HashingAlgorithm {
-        match value {
-            0 => HashingAlgorithm::None,
-            1 => HashingAlgorithm::Xxh3,
-            2 => HashingAlgorithm::Xxh64,
-            3 => HashingAlgorithm::Xxh32,
-            _ => HashingAlgorithm::None,
-        }
-    }
-}
 impl fmt::Display for HashingAlgorithm {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         write!(formatter, "{}", format!("{:?}", self).to_uppercase())
+    }
+}
+impl HashingAlgorithm {
+    pub fn list() -> &'static [HashingAlgorithm] {
+        &[
+            HashingAlgorithm::None,
+            HashingAlgorithm::Xxh3,
+            HashingAlgorithm::Xxh64,
+            HashingAlgorithm::Xxh32,
+        ]
+    }
+
+    pub fn from_u8(value: u8) -> HashingAlgorithm {
+        let mut value = value.into();
+        let hashing_algorithm_list = HashingAlgorithm::list();
+        if value >= hashing_algorithm_list.len() {
+            value = 0
+        }
+        hashing_algorithm_list[value]
     }
 }
 

@@ -724,7 +724,7 @@ pub fn encrypt_command(command: ParsedCommand) {
         "xxh64" => HashingAlgorithm::Xxh64,
         "xxh32" => HashingAlgorithm::Xxh32,
         _ => {
-            println!("Unknown hashing algorithm, defaulting to none");
+            println!("{}", format_colors(&format!("Unknown hashing algorithm $BOLD$`{}`$NORMAL$, defaulting to $BOLD$`None`$NORMAL$!", input_hashing_algorithm)));
             HashingAlgorithm::None
         }
     };
