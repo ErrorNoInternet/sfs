@@ -284,7 +284,7 @@ pub fn get_commands() -> Vec<Command> {
             Flag {
                 name: "use-original-name",
                 short_name: "u",
-                description: "Decrypt data into the name of the original file",
+                description: "Use the name of the original file while decrypting",
                 has_value: false,
             },
             Flag {
