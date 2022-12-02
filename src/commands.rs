@@ -462,8 +462,8 @@ pub fn list_command(command: ParsedCommand) {
     for flag in command.flags {
         if flag.name.is_some() {
             match flag.name.unwrap().as_str() {
-                "all" => display_all_files = true,
-                "list" => list_view = true,
+                "all" => display_all_files = !display_all_files,
+                "list" => list_view = !list_view,
                 "columns" => grid_columns = flag.value.unwrap().parse().unwrap_or(grid_columns),
                 _ => (),
             }
@@ -687,10 +687,10 @@ pub fn encrypt_command(command: ParsedCommand) {
     for flag in command.flags {
         if flag.name.is_some() {
             match flag.name.unwrap().as_str() {
-                "recursive" => recursive = true,
-                "silent" => silent = true,
-                "overwrite" => overwrite = true,
-                "keep-file" => keep_file = true,
+                "recursive" => recursive = !recursive,
+                "silent" => silent = !silent,
+                "overwrite" => overwrite = !overwrite,
+                "keep-file" => keep_file = !keep_file,
                 "hashing-algorithm" => input_hashing_algorithm = flag.value.unwrap().to_owned(),
                 "chunk-size" => chunk_size = flag.value.unwrap().parse().unwrap_or(chunk_size),
                 _ => (),
@@ -998,13 +998,13 @@ pub fn decrypt_command(command: ParsedCommand) {
     for flag in command.flags {
         if flag.name.is_some() {
             match flag.name.unwrap().as_str() {
-                "recursive" => recursive = true,
-                "silent" => silent = true,
-                "overwrite" => overwrite = true,
-                "keep-file" => keep_file = true,
-                "use-original-name" => use_original_name = true,
-                "no-verify-chunks" => no_verify_chunks = true,
-                "force" => force = true,
+                "recursive" => recursive = !recursive,
+                "silent" => silent = !silent,
+                "overwrite" => overwrite = !overwrite,
+                "keep-file" => keep_file = !keep_file,
+                "use-original-name" => use_original_name = !use_original_name,
+                "no-verify-chunks" => no_verify_chunks = !no_verify_chunks,
+                "force" => force = !force,
                 _ => (),
             }
         } else if flag.value.is_some() {
