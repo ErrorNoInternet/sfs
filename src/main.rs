@@ -43,7 +43,7 @@ impl Configuration {
                 recursive: false,
                 silent: false,
                 overwrite: false,
-                keep: false,
+                keep_file: false,
                 hashing_algorithm: String::from("xxh3"),
                 chunk_size: 1000000,
                 progress_bar_format: String::from(
@@ -54,7 +54,8 @@ impl Configuration {
                 recursive: false,
                 silent: false,
                 overwrite: false,
-                keep: false,
+                keep_file: false,
+                use_original_name: false,
                 no_verify_chunks: false,
                 progress_bar_format: String::from(
                     "$BOLD$$sfs::file.name$:$NORMAL$ [{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",

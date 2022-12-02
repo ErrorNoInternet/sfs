@@ -76,6 +76,7 @@ impl FileMetadata {
                     chunk_size: metadata.4,
                     original_name: std::str::from_utf8(&metadata.5)
                         .unwrap_or_default()
+                        .trim_matches(char::from(0))
                         .to_string(),
                 })
             }
