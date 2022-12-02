@@ -1,0 +1,26 @@
+prompt = "$BOLD$$BLUE$$PATH$ >$NORMAL$ "
+debug_mode = false
+
+[list_command]
+display_all_files = false
+list_view = false
+grid_columns = 7
+file_format = ""
+folder_format = "$BLUE$"
+
+[encrypt_command]
+recursive = false
+silent = false
+overwrite = false
+keep = false
+hashing_algorithm = "xxh3"
+chunk_size = 1000000
+progress_bar_format = "$BOLD$$sfs::file.name$:$NORMAL$ [{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})"
+
+[decrypt_command]
+recursive = false
+silent = false
+overwrite = false
+keep = false
+no_verify_chunks = false
+progress_bar_format = "$BOLD$$sfs::file.name$:$NORMAL$ [{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})"
