@@ -1132,7 +1132,7 @@ pub fn decrypt_command(command: ParsedCommand) {
         } else {
             match input_path.to_string().strip_suffix(".sfs") {
                 Some(path) => path.to_string(),
-                None => input_path.to_string(),
+                None => unreachable!(),
             }
         };
         if !overwrite {
