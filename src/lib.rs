@@ -6,7 +6,7 @@ use xxhash_rust::xxh64::Xxh64;
 extern crate structure;
 
 pub const SFS_FORMAT_VERSION: u8 = 2;
-pub const SFS_VERSION_STRING: &str = "1.0.1";
+pub const SFS_VERSION_STRING: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Debug, Default, Clone)]
 pub struct FileMetadata {
