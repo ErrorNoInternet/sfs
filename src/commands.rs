@@ -744,6 +744,12 @@ pub fn encrypt_command(command: ParsedCommand) {
                 continue;
             }
         };
+        let original_name = std::path::Path::new(&input_path)
+            .file_name()
+            .unwrap()
+            .to_os_string()
+            .into_string()
+            .unwrap();
         let mut buffered_reader = BufReader::new(&input_file);
         let output_path = input_path.to_string() + ".sfs";
         if !overwrite {
@@ -906,6 +912,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                         checksum: encrypter.get_checksum(),
                         total_bytes: encrypter.total_bytes,
                         chunk_size,
+                        original_name,
                     }
                     .pack(),
                 )

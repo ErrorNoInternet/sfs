@@ -15,10 +15,16 @@ pub struct FileMetadata {
     pub checksum: u64,
     pub total_bytes: u64,
     pub chunk_size: u64,
+    pub original_name: String,
 }
 impl FileMetadata {
     pub fn pack(&self) -> Vec<u8> {
-        let metadata_structure = structure!("BBQQQ");
+        let mut original_name = self.original_name.clone().into_bytes().to_vec();
+        for _ in 0..255 - original_name.len() {
+            original_name.push(0)
+        }
+
+        let metadata_structure = structure!("BBQQQ255S");
         metadata_structure
             .pack(
                 self.format_version,
@@ -26,6 +32,7 @@ impl FileMetadata {
                 self.checksum,
                 self.total_bytes,
                 self.chunk_size,
+                &original_name,
             )
             .unwrap()
     }
@@ -51,10 +58,11 @@ impl FileMetadata {
                     checksum: metadata.2,
                     total_bytes: metadata.3,
                     chunk_size: metadata.4,
+                    original_name: String::from("UNSUPPORTED"),
                 })
             }
             2 => {
-                let metadata_structure = structure!("BBQQQ");
+                let metadata_structure = structure!("BBQQQ255S");
                 let metadata =
                     match metadata_structure.unpack(&metadata_bytes[..metadata_structure.size()]) {
                         Ok(metadata) => metadata,
@@ -66,6 +74,9 @@ impl FileMetadata {
                     checksum: metadata.2,
                     total_bytes: metadata.3,
                     chunk_size: metadata.4,
+                    original_name: std::str::from_utf8(&metadata.5)
+                        .unwrap_or_default()
+                        .to_string(),
                 })
             }
             _ => Ok(FileMetadata {
@@ -74,6 +85,7 @@ impl FileMetadata {
                 checksum: 0,
                 total_bytes: 0,
                 chunk_size: 0,
+                original_name: String::new(),
             }),
         }
     }
