@@ -798,7 +798,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 println!(
                     "{} {:?}",
                     format_colors(&format!(
-                        "$BOLD$[{}] Unable to create file:$NORMAL$",
+                        "$BOLD$[{}] Unable to create output file:$NORMAL$",
                         output_path
                     )),
                     error
@@ -1173,7 +1173,7 @@ pub fn decrypt_command(command: ParsedCommand) {
                 println!(
                     "{} {:?}",
                     format_colors(&format!(
-                        "$BOLD$[{}] Unable to create file:$NORMAL$",
+                        "$BOLD$[{}] Unable to create output file:$NORMAL$",
                         output_path
                     )),
                     error
