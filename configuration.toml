@@ -15,6 +15,7 @@ overwrite = false
 keep_file = false
 hashing_algorithm = "xxh3"
 chunk_size = 1000000
+assign_random_name = false
 progress_bar_format = "$BOLD$$sfs::file.name$:$NORMAL$ [{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})"
 
 [decrypt_command]
