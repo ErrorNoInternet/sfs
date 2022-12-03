@@ -17,3 +17,5 @@ cargo install --path .
 ```
 
 SFS has only been tested on Linux, and might not work well on Windows or other operating systems. Please [create an issue](https://github.com/ErrorNoInternet/sfs/issues/new) if you run into a problem.
+
+<sub>If you would like to modify or use this repository (including its code) in your own project, please be sure to credit!</sub>
