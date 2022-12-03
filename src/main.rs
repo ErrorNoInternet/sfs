@@ -46,6 +46,7 @@ impl Configuration {
                 keep_file: false,
                 hashing_algorithm: String::from("xxh3"),
                 chunk_size: 1000000,
+                assign_random_name: false,
                 progress_bar_format: String::from(
                     "$BOLD$$sfs::file.name$:$NORMAL$ [{elapsed_precise}] [{wide_bar:.blue/white}] {bytes}/{total_bytes} ({eta})",
                 ),

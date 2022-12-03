@@ -1,6 +1,7 @@
 use crate::utilities::{determine_encrypted_size, format_colors, quit_sfs, remove_colors};
 use crate::Configuration;
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
+use rand::{distributions::Alphanumeric, Rng};
 use serde_derive::{Deserialize, Serialize};
 use sfs::{Decrypter, Encrypter, FileMetadata, HashingAlgorithm};
 use std::collections::HashMap;
@@ -68,6 +69,7 @@ pub struct EncryptCommandConfiguration {
     pub keep_file: bool,
     pub hashing_algorithm: String,
     pub chunk_size: u64,
+    pub assign_random_name: bool,
     pub progress_bar_format: String,
 }
 
@@ -244,6 +246,12 @@ pub fn get_commands() -> Vec<Command> {
                 short_name: "c",
                 description: "The chunk size to encrypt data in",
                 has_value: true,
+            },
+            Flag {
+                name: "assign-random-name",
+                short_name: "a",
+                description: "Assign a random name to the encrypted file",
+                has_value: false,
             },
         ],
         aliases: &[],
@@ -683,6 +691,7 @@ pub fn encrypt_command(command: ParsedCommand) {
     let mut keep_file = configuration.encrypt_command.keep_file;
     let mut input_hashing_algorithm = configuration.encrypt_command.hashing_algorithm.clone();
     let mut chunk_size = configuration.encrypt_command.chunk_size;
+    let mut assign_random_name = configuration.encrypt_command.assign_random_name;
     let mut raw_input_paths = Vec::new();
     for flag in command.flags {
         if flag.name.is_some() {
@@ -693,6 +702,7 @@ pub fn encrypt_command(command: ParsedCommand) {
                 "keep-file" => keep_file = !keep_file,
                 "hashing-algorithm" => input_hashing_algorithm = flag.value.unwrap().to_owned(),
                 "chunk-size" => chunk_size = flag.value.unwrap().parse().unwrap_or(chunk_size),
+                "assign-random-name" => assign_random_name = !assign_random_name,
                 _ => (),
             }
         } else if flag.value.is_some() {
@@ -759,7 +769,15 @@ pub fn encrypt_command(command: ParsedCommand) {
             .unwrap();
 
         let mut buffered_reader = BufReader::new(&input_file);
-        let output_path = input_path.to_string() + ".sfs";
+        let output_path = if assign_random_name {
+            rand::thread_rng()
+                .sample_iter(&Alphanumeric)
+                .take(32)
+                .map(char::from)
+                .collect()
+        } else {
+            input_path.to_string()
+        } + ".sfs";
         if !overwrite {
             if fs::metadata(&output_path).is_ok() {
                 let mut input = String::new();
