@@ -1128,7 +1128,13 @@ pub fn decrypt_command(command: ParsedCommand) {
         }
 
         let output_path = if use_original_name {
-            metadata.original_name
+            std::path::Path::new(&input_path)
+                .parent()
+                .unwrap()
+                .join(metadata.original_name)
+                .to_str()
+                .unwrap()
+                .to_string()
         } else {
             match input_path.to_string().strip_suffix(".sfs") {
                 Some(path) => path.to_string(),
