@@ -117,7 +117,7 @@ fn main() {
                         println!();
                         break;
                     } else {
-                        print!("{}", format_colors(&String::from("Your configuration file seems to be corrupted/incomplete. Would you like to overwrite it with a new one? $BOLD$Y/N:$NORMAL$ ")));
+                        print!("{}", format_colors(&String::from("Your configuration file seems to be corrupted/incomplete. Would you like to overwrite it with a completely new one? $BOLD$Y/N:$NORMAL$ ")));
                         std::io::stdout().flush().unwrap();
                         input.clear();
                         match std::io::stdin().read_line(&mut input) {
