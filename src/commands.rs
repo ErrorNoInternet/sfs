@@ -1402,11 +1402,11 @@ pub fn information_command(command: ParsedCommand) {
                 metadata.original_name,
                 metadata.format_version,
                 metadata.total_bytes,
-                humansize::format_size(metadata.total_bytes, humansize::DECIMAL),
+                humansize::format_size(metadata.total_bytes, humansize::BINARY),
                 HashingAlgorithm::from_u8(metadata.hashing_algorithm),
                 metadata.checksum,
                 metadata.chunk_size,
-                humansize::format_size(metadata.chunk_size, humansize::DECIMAL),
+                humansize::format_size(metadata.chunk_size, humansize::BINARY),
             ))
         )
     }
