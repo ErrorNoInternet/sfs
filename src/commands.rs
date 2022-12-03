@@ -770,11 +770,19 @@ pub fn encrypt_command(command: ParsedCommand) {
 
         let mut buffered_reader = BufReader::new(&input_file);
         let output_path = if assign_random_name {
-            rand::thread_rng()
-                .sample_iter(&Alphanumeric)
-                .take(32)
-                .map(char::from)
-                .collect()
+            std::path::Path::new(&input_path)
+                .parent()
+                .unwrap()
+                .join(
+                    rand::thread_rng()
+                        .sample_iter(&Alphanumeric)
+                        .take(32)
+                        .map(char::from)
+                        .collect::<String>(),
+                )
+                .to_str()
+                .unwrap()
+                .to_string()
         } else {
             input_path.to_string()
         } + ".sfs";
