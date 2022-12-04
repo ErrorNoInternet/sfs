@@ -983,6 +983,8 @@ pub fn encrypt_command(command: ParsedCommand) {
                 }
             }
         }
+
+        println!()
     }
 }
 
@@ -1322,6 +1324,8 @@ pub fn decrypt_command(command: ParsedCommand) {
                 }
             }
         }
+
+        println!()
     }
 }
 
