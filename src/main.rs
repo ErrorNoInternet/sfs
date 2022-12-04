@@ -177,7 +177,10 @@ fn main() {
     match rpassword::read_password() {
         Ok(repeat_password) => {
             if password != repeat_password {
-                println!("Passwords do not match!");
+                println!(
+                    "{}",
+                    format_colors(&String::from("$BOLD$Passwords do not match!$NORMAL$"))
+                );
                 return;
             }
         }
