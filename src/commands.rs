@@ -207,7 +207,7 @@ pub fn get_commands() -> Vec<Command> {
     commands.push(Command {
         name: "encrypt",
         metadata: CommandMetadata {
-            description: "Encrypt the specified file(s) with your password",
+            description: "Encrypt the specified file(s) with your password - hashing algorithms include None, XXH3, XXH64, and XXH32",
             arguments: &["[FILE]..."],
         },
         flags: &[
@@ -238,7 +238,7 @@ pub fn get_commands() -> Vec<Command> {
             Flag {
                 name: "hashing-algorithm",
                 short_name: "h",
-                description: "Which hashing algorithm to use (None/XXH3/XXH64/XXH32)",
+                description: "Which hashing algorithm to use for verifying integrity",
                 has_value: true,
             },
             Flag {
@@ -280,7 +280,7 @@ pub fn get_commands() -> Vec<Command> {
             Flag {
                 name: "overwrite",
                 short_name: "o",
-                description: "Overwrite the output file even if it exists",
+                description: "Overwrite the output file even if it already exists",
                 has_value: false,
             },
             Flag {
@@ -292,7 +292,7 @@ pub fn get_commands() -> Vec<Command> {
             Flag {
                 name: "use-original-name",
                 short_name: "u",
-                description: "Use the name of the original file while decrypting",
+                description: "Use the name of the original file while decrypting (enabled by default if name is random)",
                 has_value: false,
             },
             Flag {
