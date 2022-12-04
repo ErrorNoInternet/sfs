@@ -1154,7 +1154,11 @@ pub fn decrypt_command(command: ParsedCommand) {
             }
         }
 
-        let output_path = if use_original_name {
+        let mut temporary_use_original_name = use_original_name;
+        if metadata.restore_name {
+            temporary_use_original_name = !temporary_use_original_name
+        }
+        let output_path = if temporary_use_original_name {
             std::path::Path::new(&input_path)
                 .parent()
                 .unwrap()
@@ -1406,9 +1410,10 @@ pub fn information_command(command: ParsedCommand) {
         println!(
             "{}",
             format_colors(&format!(
-                "$BOLD$`{}`$NORMAL$:\n\t$BOLD$Original Name:$NORMAL$ {}\n\t$BOLD$Decrypted Size:$NORMAL$ {} ({})\n\t$BOLD$SFS File Format Version:$NORMAL$ v{}\n\t$BOLD$Hashing Algorithm:$NORMAL$ {}\n\t$BOLD$Checksum:$NORMAL$ {:X}\n\t$BOLD$Chunk Size:$NORMAL$ {} ({})",
+                "$BOLD$`{}`$NORMAL$:\n\t$BOLD$Original Name:$NORMAL$ {}\n\t$BOLD$Use Original Name:$NORMAL$ {}\n\t$BOLD$Decrypted Size:$NORMAL$ {} ({})\n\t$BOLD$SFS File Format Version:$NORMAL$ v{}\n\t$BOLD$Hashing Algorithm:$NORMAL$ {}\n\t$BOLD$Checksum:$NORMAL$ {:X}\n\t$BOLD$Chunk Size:$NORMAL$ {} ({})",
                 input_path,
                 metadata.original_name,
+                if metadata.restore_name { "Yes" } else { "No" },
                 metadata.total_bytes,
                 humansize::format_size(metadata.total_bytes, humansize::BINARY),
                 metadata.format_version,
