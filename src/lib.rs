@@ -11,11 +11,12 @@ pub const SFS_VERSION_STRING: &str = env!("CARGO_PKG_VERSION");
 #[derive(Debug, Default, Clone)]
 pub struct FileMetadata {
     pub format_version: u8,
+    pub original_name: String,
+    pub restore_name: bool,
+    pub total_bytes: u64,
     pub hashing_algorithm: u8,
     pub checksum: u64,
-    pub total_bytes: u64,
     pub chunk_size: u64,
-    pub original_name: String,
 }
 impl FileMetadata {
     pub fn pack(&self) -> Vec<u8> {
@@ -24,15 +25,16 @@ impl FileMetadata {
             original_name.push(0)
         }
 
-        let metadata_structure = structure!("BBQQQ255S");
+        let metadata_structure = structure!("B255S?QBQQ");
         metadata_structure
             .pack(
                 self.format_version,
+                &original_name,
+                self.restore_name,
+                self.total_bytes,
                 self.hashing_algorithm,
                 self.checksum,
-                self.total_bytes,
                 self.chunk_size,
-                &original_name,
             )
             .unwrap()
     }
@@ -59,10 +61,11 @@ impl FileMetadata {
                     total_bytes: metadata.3,
                     chunk_size: metadata.4,
                     original_name: String::from("UNSUPPORTED"),
+                    restore_name: false,
                 })
             }
             2 => {
-                let metadata_structure = structure!("BBQQQ255S");
+                let metadata_structure = structure!("B255S?QBQQ");
                 let metadata =
                     match metadata_structure.unpack(&metadata_bytes[..metadata_structure.size()]) {
                         Ok(metadata) => metadata,
@@ -70,23 +73,25 @@ impl FileMetadata {
                     };
                 Ok(FileMetadata {
                     format_version: metadata.0,
-                    hashing_algorithm: metadata.1,
-                    checksum: metadata.2,
-                    total_bytes: metadata.3,
-                    chunk_size: metadata.4,
-                    original_name: std::str::from_utf8(&metadata.5)
+                    original_name: std::str::from_utf8(&metadata.1)
                         .unwrap_or_default()
                         .trim_matches(char::from(0))
                         .to_string(),
+                    restore_name: metadata.2,
+                    total_bytes: metadata.3,
+                    hashing_algorithm: metadata.4,
+                    checksum: metadata.5,
+                    chunk_size: metadata.6,
                 })
             }
             _ => Ok(FileMetadata {
                 format_version: version_metadata.0,
+                original_name: String::new(),
+                restore_name: false,
+                total_bytes: 0,
                 hashing_algorithm: 0,
                 checksum: 0,
-                total_bytes: 0,
                 chunk_size: 0,
-                original_name: String::new(),
             }),
         }
     }

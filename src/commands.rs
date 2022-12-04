@@ -942,11 +942,12 @@ pub fn encrypt_command(command: ParsedCommand) {
                 .encrypt(
                     &FileMetadata {
                         format_version: sfs::SFS_FORMAT_VERSION,
+                        original_name,
+                        restore_name: assign_random_name,
+                        total_bytes: encrypter.total_bytes,
                         hashing_algorithm: hashing_algorithm as u8,
                         checksum: encrypter.get_checksum(),
-                        total_bytes: encrypter.total_bytes,
                         chunk_size,
-                        original_name,
                     }
                     .pack(),
                 )
