@@ -8,7 +8,8 @@ grid_columns = 7
 decrypt_name = false
 file_format = "$sfs::name$"
 folder_format = "$BLUE$$sfs::name$"
-decrypted_format = "$YELLOW$$sfs::decrypted_name$ $BOLD$($sfs::name$)"
+encrypted_format = "$YELLOW$$sfs::name$"
+decrypted_name_format = "$YELLOW$$sfs::decrypted_name$ $BOLD$($sfs::name$)"
 
 [encrypt_command]
 recursive = false
