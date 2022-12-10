@@ -35,7 +35,7 @@ impl Configuration {
             list_command: LsCommandConfiguration {
                 display_all_files: false,
                 list_view: false,
-                grid_columns: 7,
+                grid_columns: 6,
                 decrypt_name: false,
                 file_format: String::from("$sfs::name$"),
                 folder_format: String::from("$BLUE$$sfs::name$"),

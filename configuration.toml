@@ -4,7 +4,7 @@ debug_mode = false
 [list_command]
 display_all_files = false
 list_view = false
-grid_columns = 7
+grid_columns = 6
 decrypt_name = false
 file_format = "$sfs::name$"
 folder_format = "$BLUE$$sfs::name$"
