@@ -1,12 +1,14 @@
-prompt = "$BOLD$$BLUE$$PATH$ >$NORMAL$ "
+prompt = "$BOLD$$BLUE$$sfs::path$ >$NORMAL$ "
 debug_mode = false
 
 [list_command]
 display_all_files = false
 list_view = false
 grid_columns = 7
-file_format = ""
-folder_format = "$BLUE$"
+decrypt_name = false
+file_format = "$sfs::name$"
+folder_format = "$BLUE$$sfs::name$"
+decrypted_format = "$YELLOW$$sfs::decrypted_name$ $BOLD$($sfs::name$)"
 
 [encrypt_command]
 recursive = false
