@@ -57,8 +57,10 @@ pub struct LsCommandConfiguration {
     pub display_all_files: bool,
     pub list_view: bool,
     pub grid_columns: u16,
+    pub decrypt_name: bool,
     pub file_format: String,
     pub folder_format: String,
+    pub decrypted_format: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -155,10 +157,16 @@ pub fn get_commands() -> Vec<Command> {
                 description: "The amount of columns to print for grid view",
                 has_value: true,
             },
+            Flag {
+                name: "decrypt-name",
+                short_name: "d",
+                description: "Display the decrypted names of encrypted files",
+                has_value: false,
+            },
         ],
         aliases: &[],
         callback: list_command,
-        contexts: &["configuration"],
+        contexts: &["fernet", "configuration"],
     });
     commands.push(Command {
         name: "rm",
@@ -449,6 +457,19 @@ pub fn change_directory_command(command: ParsedCommand) {
 }
 
 pub fn list_command(command: ParsedCommand) {
+    let fernet = match command.contexts.get(&String::from("fernet")) {
+        Some(fernet) => match fernet {
+            Context::Fernet(fernet) => fernet,
+            _ => unreachable!(),
+        },
+        None => {
+            println!(
+                "{} Fernet was not passed by SFS!",
+                format_colors(&String::from("$BOLD$Fatal error:$NORMAL$")),
+            );
+            return;
+        }
+    };
     let configuration = match command.contexts.get(&String::from("configuration")) {
         Some(configuration) => match configuration {
             Context::Configuration(configuration) => configuration,
@@ -466,6 +487,7 @@ pub fn list_command(command: ParsedCommand) {
     let mut display_all_files = configuration.list_command.display_all_files;
     let mut list_view = configuration.list_command.list_view;
     let mut grid_columns = configuration.list_command.grid_columns;
+    let mut decrypt_name = configuration.list_command.decrypt_name;
     let mut input_paths = Vec::new();
     for flag in command.flags {
         if flag.name.is_some() {
@@ -473,6 +495,7 @@ pub fn list_command(command: ParsedCommand) {
                 "all" => display_all_files = !display_all_files,
                 "list" => list_view = !list_view,
                 "columns" => grid_columns = flag.value.unwrap().parse().unwrap_or(grid_columns),
+                "decrypt-name" => decrypt_name = !decrypt_name,
                 _ => (),
             }
         } else if flag.value.is_some() {
@@ -498,8 +521,38 @@ pub fn list_command(command: ParsedCommand) {
             file_name = format_colors(&configuration.list_command.folder_format)
                 .replace("$sfs::name$", &file_name);
         } else {
-            file_name = format_colors(&configuration.list_command.file_format)
-                .replace("$sfs::name$", &file_name);
+            let mut file_metadata: (bool, FileMetadata) = (false, FileMetadata::default());
+            if decrypt_name && file_name.ends_with(".sfs") {
+                match fs::File::open(&path.path().into_os_string().into_string().unwrap()) {
+                    Ok(file) => {
+                        let mut buffer = String::new();
+                        match BufReader::new(&file).read_line(&mut buffer) {
+                            Ok(_) => {
+                                buffer = buffer.trim().to_string();
+                                match fernet.decrypt(&buffer) {
+                                    Ok(metadata_bytes) => {
+                                        match FileMetadata::parse(&metadata_bytes) {
+                                            Ok(metadata) => file_metadata = (true, metadata),
+                                            Err(_) => (),
+                                        }
+                                    }
+                                    Err(_) => (),
+                                };
+                            }
+                            Err(_) => (),
+                        };
+                    }
+                    Err(_) => (),
+                };
+            };
+            if file_metadata.0 {
+                file_name = format_colors(&configuration.list_command.decrypted_format)
+                    .replace("$sfs::name$", &file_name)
+                    .replace("$sfs::decrypted_name$", &file_metadata.1.original_name);
+            } else {
+                file_name = format_colors(&configuration.list_command.file_format)
+                    .replace("$sfs::name$", &file_name);
+            }
         }
         let mut colorless_file_name = remove_colors(&file_name);
 
