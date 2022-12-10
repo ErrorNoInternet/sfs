@@ -30,14 +30,14 @@ pub struct Configuration {
 impl Configuration {
     fn default() -> Self {
         Configuration {
-            prompt: String::from("$BOLD$$BLUE$$PATH$ >$NORMAL$ "),
+            prompt: String::from("$BOLD$$BLUE$$sfs::path$ >$NORMAL$ "),
             debug_mode: false,
             list_command: LsCommandConfiguration {
                 display_all_files: false,
                 list_view: false,
                 grid_columns: 7,
-                file_format: String::from(""),
-                folder_format: String::from("$BLUE$"),
+                file_format: String::from("$sfs::name$"),
+                folder_format: String::from("$BLUE$$sfs::name$"),
             },
             encrypt_command: EncryptCommandConfiguration {
                 recursive: false,
@@ -229,7 +229,7 @@ fn main() {
         }
         let input;
         match editor
-            .readline(&format_colors(&configuration.prompt).replace("$PATH$", &current_path))
+            .readline(&format_colors(&configuration.prompt).replace("$sfs::path$", &current_path))
         {
             Ok(mut line) => {
                 line = line.trim().to_string();

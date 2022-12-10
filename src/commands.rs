@@ -495,9 +495,11 @@ pub fn list_command(command: ParsedCommand) {
     let print_file = |path: &std::fs::DirEntry, current_column: &mut u16| {
         let mut file_name = path.file_name().to_str().unwrap().to_string();
         if path.file_type().unwrap().is_dir() {
-            file_name = format_colors(&configuration.list_command.folder_format) + &file_name;
+            file_name = format_colors(&configuration.list_command.folder_format)
+                .replace("$sfs::name$", &file_name);
         } else {
-            file_name = format_colors(&configuration.list_command.file_format) + &file_name;
+            file_name = format_colors(&configuration.list_command.file_format)
+                .replace("$sfs::name$", &file_name);
         }
         let mut colorless_file_name = remove_colors(&file_name);
 
