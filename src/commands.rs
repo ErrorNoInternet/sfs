@@ -60,7 +60,8 @@ pub struct LsCommandConfiguration {
     pub decrypt_name: bool,
     pub file_format: String,
     pub folder_format: String,
-    pub decrypted_format: String,
+    pub encrypted_format: String,
+    pub decrypted_name_format: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -546,12 +547,17 @@ pub fn list_command(command: ParsedCommand) {
                 };
             };
             if file_metadata.0 {
-                file_name = format_colors(&configuration.list_command.decrypted_format)
+                file_name = format_colors(&configuration.list_command.decrypted_name_format)
                     .replace("$sfs::name$", &file_name)
                     .replace("$sfs::decrypted_name$", &file_metadata.1.original_name);
             } else {
-                file_name = format_colors(&configuration.list_command.file_format)
-                    .replace("$sfs::name$", &file_name);
+                if file_name.ends_with(".sfs") {
+                    file_name = format_colors(&configuration.list_command.encrypted_format)
+                        .replace("$sfs::name$", &file_name);
+                } else {
+                    file_name = format_colors(&configuration.list_command.file_format)
+                        .replace("$sfs::name$", &file_name);
+                }
             }
         }
         let mut colorless_file_name = remove_colors(&file_name);

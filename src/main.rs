@@ -39,7 +39,8 @@ impl Configuration {
                 decrypt_name: false,
                 file_format: String::from("$sfs::name$"),
                 folder_format: String::from("$BLUE$$sfs::name$"),
-                decrypted_format: String::from("$YELLOW$$sfs::decrypted_name$ $BOLD$($sfs::name$)")
+                encrypted_format: String::from("$YELLOW$$sfs::name$"),
+                decrypted_name_format: String::from("$YELLOW$$sfs::decrypted_name$ $BOLD$($sfs::name$)")
             },
             encrypt_command: EncryptCommandConfiguration {
                 recursive: false,
