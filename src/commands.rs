@@ -429,10 +429,12 @@ pub fn help_command(command: ParsedCommand) {
 
 pub fn version_command(_command: ParsedCommand) {
     println!(
-        "{} v{} (file format v{})",
-        format_colors(&String::from("$BOLD$SFS$NORMAL$")),
-        sfs::SFS_VERSION_STRING,
-        sfs::SFS_FORMAT_VERSION,
+        "{}",
+        format_colors(&format!(
+            "$BOLD$SFS v{}$NORMAL$ (file format $BOLD$v{}$NORMAL$)",
+            sfs::SFS_VERSION_STRING,
+            sfs::SFS_FORMAT_VERSION,
+        ))
     )
 }
 

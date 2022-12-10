@@ -102,7 +102,19 @@ fn main() {
     } else if cfg!(windows) {
         configuration_path.push("AppData/Roaming/sfs")
     }
-    fs::create_dir_all(&configuration_path).expect("Unable to create configuration directory");
+    match fs::create_dir_all(&configuration_path) {
+        Ok(_) => (),
+        Err(error) => {
+            println!(
+                "{}",
+                format_colors(&format!(
+                    "$BOLD$Unable to create configuration directory:$NORMAL$ {}",
+                    error
+                ))
+            );
+            return;
+        }
+    };
     let mut configuration_file = configuration_path.clone();
     configuration_file.push("configuration.toml");
     let configuration_string = match fs::read_to_string(&configuration_file) {
@@ -155,7 +167,7 @@ fn main() {
     };
 
     if configuration_string.is_empty() {
-        println!("{}", format_colors(&format!("$BOLD$Welcome to the $BLUE$SFS$NORMAL$$BOLD$ shell! This message will only appear once.\n$BOLD$Please enter a password. This password is used to encrypt/decrypt your files, and you must re-enter it every time you launch SFS.$NORMAL$")));
+        println!("{}", format_colors(&format!("$BOLD$Welcome to the $BLUE$SFS$NORMAL$$BOLD$ shell! This message will only appear once.\n$BOLD$Please enter a password. This password is used to encrypt/decrypt your files, and you must re-enter it every time you launch SFS.\nYou may enter a different password every time you launch SFS, but the files encrypted with your old password won't be accessible.$NORMAL$")));
     }
     print!("Password: ");
     std::io::stdout().flush().unwrap();
