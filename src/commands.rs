@@ -571,9 +571,13 @@ pub fn list_command(command: ParsedCommand) {
             }
 
             if colorless_file_name.chars().count() >= padding {
-                for _ in 0..colorless_file_name.chars().count() - (padding - 4) {
-                    colorless_file_name.pop();
-                }
+                colorless_file_name = colorless_file_name
+                    .chars()
+                    .take(
+                        colorless_file_name.chars().count()
+                            - (colorless_file_name.chars().count() - (padding - 4)),
+                    )
+                    .collect();
                 colorless_file_name += "...";
                 while remove_colors(&file_name) + "..." != colorless_file_name {
                     file_name.pop();
